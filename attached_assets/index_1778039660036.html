@@ -1,0 +1,2315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Nexora — Your AI Companion</title>
+
+<!-- ═══ PWA — Manifest & Icons ═══ -->
+<link rel="manifest" href="manifest.json?v=20260503-1"/>
+<meta name="theme-color" content="#7c5cff"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Nexora"/>
+<link rel="apple-touch-icon" href="apple-touch-icon.png"/>
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png"/>
+<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png"/>
+<link rel="icon" type="image/svg+xml" href="icon.svg"/>
+
+<!-- ═══ SEO / Social ═══ -->
+<meta name="description" content="Nexora — Your personal AI companion. Chat, ask, explore."/>
+<meta name="application-name" content="Nexora"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<!-- Syntax Highlighting Theme -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" id="hljs-theme" crossorigin="anonymous"/>
+
+<!-- Theme flash prevention — apply saved theme before first paint -->
+<script>
+  (function(){
+    try {
+      if (localStorage.getItem('nexora_theme') === 'light') {
+        document.documentElement.classList.add('preload-light');
+      }
+    } catch(e) {}
+  })();
+</script>
+
+  <link rel="stylesheet" href="./style.css?v=20260503-2"/>
+  <link rel="stylesheet" href="./pwa-install.css?v=20260503-1"/>
+  <!-- Three.js for GPU-rendered orb -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" crossorigin="anonymous"></script>
+  <!-- Nexora Orb — unified orchestration system (must load before app.js) -->
+  <script src="./nexora-orb.js?v=20260503-1"></script>
+</head>
+<body>
+
+<div id="phone">
+
+  <!-- Top bar -->
+  <div id="statusbar">
+    <span id="clockDisplay">9:41</span>
+    <span class="sb-date" id="dateDisplay"></span>
+  </div>
+
+  <!-- Header -->
+  <div id="header">
+    <button class="back-btn" onclick="handleBack()">
+      <svg viewBox="0 0 24 24" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <div class="header-center">
+      <div class="header-avatar-wrap">
+        <div class="header-avatar">✨</div>
+        <div class="status-ring" id="statusRing"></div>
+      </div>
+      <div class="header-text">
+        <h2>Nexora <span id="aiBadge" class="ai-badge offline"><span class="ai-dot"></span>Rule-based</span></h2>
+        <div class="header-live-row" id="headerLiveRow">
+          <p id="headerStatus"><span class="status-dot-live" id="statusDotLive"></span>here for you</p>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <button class="memory-brain-btn" onclick="openMemoryPanel()" title="What Nexora remembers">🧠</button>
+      <div id="themeToggle" onclick="toggleTheme()" title="Toggle light/dark">🌙</div>
+      <div class="menu-btn" onclick="toggleMenu()">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mode dropdown -->
+  <div id="modeToggle">
+    <div class="menu-section-label">Modes</div>
+    <div class="mode-item selected" onclick="setMode('support')" id="mode-support"><span>🤍</span> Support Mode</div>
+    <div class="mode-item" onclick="setMode('gossip')" id="mode-gossip"><span>✨</span> Gossip Mode</div>
+    <div class="mode-item" onclick="setMode('hype')" id="mode-hype"><span>🔥</span> Hype Mode</div>
+    <div class="mode-item" onclick="switchToVoice()" id="mode-voice"><span>🎙️</span> Voice Mode</div>
+    <div class="mode-item" id="mode-tutor-toggle" onclick="toggleTutorModeFromMenu()"><span>🧠</span> Tutor Mode: OFF</div>
+    <div class="menu-section-divider"></div>
+    <div class="menu-section-label">Tools</div>
+    <div class="mode-item" onclick="openSearch()"><span>🔍</span> Search Chat</div>
+    <div class="mode-item" onclick="openApiPanel()"><span>🔑</span> API Key Setup</div>
+    <div class="mode-item" onclick="openComparePanel()"><span>⚖️</span> AI Compare</div>
+    <div class="mode-item" onclick="openStudyMode()"><span>📚</span> Explore</div>
+    <div class="mode-item" onclick="openProgressDashboard()"><span>📊</span> Progress</div>
+    <div class="mode-item" onclick="openPodcast()"><span>🎧</span> Listen Mode</div>
+    <div class="menu-section-divider"></div>
+    <div class="menu-section-label">Account</div>
+    <div class="mode-item" onclick="openReminderPanel()"><span>⏰</span> Daily Reminder</div>
+    <div class="mode-item" onclick="openGroupPanel()"><span>👥</span> Group Room</div>
+    <div class="mode-item" onclick="clearChat()" style="color:#f87171"><span>🗑️</span> Clear Chat</div>
+
+  </div>
+
+  <!-- Search overlay -->
+  <div id="searchOverlay">
+    <div class="search-header">
+      <input id="searchInput" placeholder="Search in chat…" oninput="doSearch(this.value)" autocomplete="off"/>
+      <button class="search-close" onclick="closeSearch()">✕</button>
+    </div>
+    <div id="searchResults"></div>
+  </div>
+
+  <!-- Copy toast -->
+  <div id="copyToast">Copied! 📋</div>
+
+  <!-- Shared backdrop for reminder + group panels -->
+  <div class="mini-panel-backdrop" id="miniPanelBackdrop" onclick="closeMiniPanels()"></div>
+
+  <div id="reminderPanel">
+    <div class="mini-panel-head">
+      <div class="mini-title">⏰ Daily Reminder</div>
+      <button class="mini-close" onclick="closeReminderPanel()">✕</button>
+    </div>
+    <div class="mini-panel-body">
+      <label class="mini-label">Time</label>
+      <input id="dailyReminderTime" class="mini-input" type="time" value="20:30" />
+      <label class="mini-label">Email (optional for daily email)</label>
+      <input id="dailyReminderEmail" class="mini-input" type="email" placeholder="you@example.com" />
+      <button class="mini-primary" onclick="saveDailyReminder()">Save Reminder</button>
+      <div id="dailyReminderHint" class="mini-hint"></div>
+    </div>
+  </div>
+
+  <div id="groupPanel">
+    <div class="mini-panel-head">
+      <div class="mini-title">👥 Group Study Room</div>
+      <button class="mini-close" onclick="closeGroupPanel()">✕</button>
+    </div>
+    <div class="mini-panel-body">
+      <input id="groupRoomCode" class="mini-input" placeholder="Room code (e.g. cse101)" />
+      <button class="mini-primary" onclick="joinGroupRoom()">Join Room</button>
+      <div id="groupRoomStatus" class="mini-hint"></div>
+      <div id="groupRoomFeed" class="group-feed"></div>
+      <div class="group-send-row">
+        <input id="groupRoomMsg" class="mini-input" placeholder="Send to room..." />
+        <button class="mini-primary" onclick="sendGroupMessage()">Send</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- API Key Setup Panel -->
+  <div id="apiPanel">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px;">
+      <div class="api-panel-title">🔑 API Keys</div>
+      <button class="api-close-btn" onclick="closeApiPanel()">✕ Close</button>
+    </div>
+
+    <!-- Tab switcher -->
+    <div class="key-tabs">
+      <button class="key-tab active" id="tab-gemini" onclick="switchKeyTab('gemini')">
+        <span class="tab-dot" id="dot-gemini"></span> Gemini
+      </button>
+      <button class="key-tab" id="tab-openrouter" onclick="switchKeyTab('openrouter')">
+        <span class="tab-dot" id="dot-openrouter"></span> OpenRouter
+      </button>
+    </div>
+
+    <!-- ── Gemini pane ── -->
+    <div class="key-pane active" id="pane-gemini">
+      <div class="api-status-row" id="geminiStatusRow">
+        <span id="geminiStatusText">No Gemini key saved</span>
+        <span class="api-model-tag">gemini-2.0-flash</span>
+      </div>
+      <div class="api-panel-sub">
+        <strong>Completely free</strong> — no credit card needed.<br><br>
+        <strong>Step 1:</strong> Go to <a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com/apikey</a> → Sign in → Create API key<br>
+        <strong>Step 2:</strong> Paste it below (starts with <code>AIza...</code>)<br><br>
+        ✅ Powers the <strong>Gemini card</strong> in Compare Mode &amp; main chat.<br>
+        ✅ Also enables free <strong>image analysis</strong> (vision).
+      </div>
+      <div class="api-input-wrap">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <input id="geminiKeyInput" type="password" placeholder="AIzaSy... or AQ.Ab8..." autocomplete="off" maxlength="120"/>
+      </div>
+      <div class="api-warn-row" id="geminiWarnRow" style="display:none;">
+        ⚠️ A Gemini key is already saved. Pasting a new one will replace it.
+      </div>
+      <div id="geminiKeyError" style="display:none;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:10px;padding:10px 12px;font-size:12px;color:#fca5a5;line-height:1.6;margin-bottom:6px;"></div>
+      <button class="api-save-btn" onclick="saveGeminiKey()">Save Gemini Key ✨</button>
+      <button class="api-remove-btn" id="geminiRemoveBtn" style="display:none;" onclick="deleteGeminiKey()">🗑️ Remove Gemini key</button>
+    </div>
+
+    <!-- ── OpenRouter pane ── -->
+    <div class="key-pane" id="pane-openrouter">
+      <div class="api-status-row" id="apiStatusRow">
+        <span id="apiStatusText">No key saved</span>
+        <span class="api-model-tag" id="apiModelTag">auto-select</span>
+      </div>
+      <div class="api-panel-sub">
+        Nexora uses <strong>free AI models</strong> via OpenRouter — no credits needed!<br><br>
+        <strong>Step 1:</strong> Go to <a href="https://openrouter.ai/keys" target="_blank" style="color:var(--accent)">openrouter.ai/keys</a> → sign up free → create a key<br>
+        <strong>Step 2:</strong> Paste your key below (starts with <code>sk-or-...</code>)<br><br>
+        🆓 <strong>Free models:</strong> Llama 3.3 · Gemini Flash · Mistral · DeepSeek · Qwen3
+      </div>
+      <div class="api-input-wrap">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <input id="apiKeyInput" type="password" placeholder="sk-or-v1-..." autocomplete="off" maxlength="120"/>
+      </div>
+      <div class="api-warn-row" id="apiWarnRow" style="display:none;">
+        ⚠️ A key is already saved. Pasting a new one will <strong>replace it immediately</strong>.
+      </div>
+      <button class="api-save-btn" onclick="saveApiKey()">Save & Activate ✨</button>
+      <button class="api-remove-btn" id="apiRemoveBtn" style="display:none;" onclick="deleteApiKey()">🗑️ Remove my personal key</button>
+    </div>
+
+    <div style="font-size:11px;color:var(--text3);text-align:center;line-height:1.6;">
+      Keys stored only in <em>your</em> browser — never shared.<br>
+      <span style="color:var(--success);">Pollinations AI is always active as free fallback.</span>
+    </div>
+  </div>
+
+  <!-- ═══ SPLASH / INTRO SCREEN ═══ -->
+  <div class="screen active" id="splashScreen">
+    <div class="splash-orb-wrap">
+      <div class="splash-ring splash-ring-1"></div>
+      <div class="splash-ring splash-ring-2"></div>
+      <div class="splash-ring splash-ring-3"></div>
+      <div class="splash-orb" id="splashOrb">
+        <div class="splash-orb-shine"></div>
+        <div class="splash-orb-inner"></div>
+        <svg class="splash-orb-star" viewBox="0 0 24 24" fill="white" width="36" height="36">
+          <path d="M12 2 L13.5 10.5 L22 12 L13.5 13.5 L12 22 L10.5 13.5 L2 12 L10.5 10.5 Z"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Branding -->
+    <div class="splash-brand">
+      <div class="splash-title-row">
+        <h1 class="splash-title">Nexora</h1>
+        <span class="splash-founder-tag">Founder &amp; CEO Bikash Talukder</span>
+      </div>
+      <p class="splash-desc">Learn smarter. Think deeper.<br>Study with every AI — together.</p>
+    </div>
+
+    <!-- Feature list -->
+    <div class="splash-features">
+      <div class="splash-feat">
+        <div class="splash-feat-icon feat-tutor">🧠</div>
+        <div class="splash-feat-text">
+          <div class="splash-feat-title">AI Tutor + Flashcards</div>
+          <div class="splash-feat-sub">Adaptive learning that knows you</div>
+        </div>
+        <div class="splash-feat-check feat-tutor-check">✓</div>
+      </div>
+      <div class="splash-feat">
+        <div class="splash-feat-icon feat-models">⚖️</div>
+        <div class="splash-feat-text">
+          <div class="splash-feat-title">Compare 20+ AI Models</div>
+          <div class="splash-feat-sub">Gemini, Claude, GPT-4o &amp; more</div>
+        </div>
+        <div class="splash-feat-check feat-models-check">✓</div>
+      </div>
+      <div class="splash-feat">
+        <div class="splash-feat-icon feat-progress">📊</div>
+        <div class="splash-feat-text">
+          <div class="splash-feat-title">Progress Tracking + XP</div>
+          <div class="splash-feat-sub">Gamified learning with streaks</div>
+        </div>
+        <div class="splash-feat-check feat-progress-check">✓</div>
+      </div>
+    </div>
+
+    <!-- CTA buttons -->
+    <div class="splash-actions">
+      <button class="splash-cta-primary" onclick="showNameScreen()">Get Started Free ✦</button>
+      <button class="splash-cta-secondary" onclick="showNameScreen()">I already have an account</button>
+    </div>
+
+  </div><!-- /splashScreen -->
+
+  <!-- NAME SCREEN -->
+  <div class="screen" id="nameScreen">
+    <div class="orb-container" id="nexoraOrbContainer">
+      <!-- Three.js WebGL renderer mounts here -->
+      <canvas id="orbCanvas" class="orb-canvas"></canvas>
+      <!-- Orbital rings (CSS animated) -->
+      <div class="orb-orbital orb-orbital-1"></div>
+      <div class="orb-orbital orb-orbital-2"></div>
+      <div class="orb-orbital orb-orbital-3"></div>
+      <!-- Outer glow halo -->
+      <div class="orb-halo"></div>
+    </div>
+    <p class="welcome-title">Meet Nexora</p>
+    <p class="welcome-sub">Your personal AI companion — here to listen, support, and vibe with you 24/7.</p>
+    <p class="welcome-byline">Designed &amp; Developed by <span class="byline-name">Bikash Talukder</span></p>
+    <div class="name-input-wrap">
+      <svg viewBox="0 0 24 24" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <input id="nameInput" placeholder="What's your name?" maxlength="24" autocomplete="off"/>
+    </div>
+    <button class="start-btn" onclick="startApp()">Begin ✨</button>
+  </div>
+
+  <!-- CHAT SCREEN -->
+  <div class="screen" id="chatScreen">
+    <div class="memory-badge" id="memoryBadge">
+      <svg viewBox="0 0 24 24" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 4v4l3 3"/></svg>
+      <span id="memoryText"></span>
+    </div>
+    <div id="messages">
+      <div class="date-divider" id="dateDivider"></div>
+      <!-- Empty state — hidden once messages arrive -->
+      <div class="chat-empty-state" id="chatEmptyState">
+        <div class="ces-orb">✦</div>
+        <div class="ces-title">How can I help you today?</div>
+        <div class="ces-sub">Ask me anything — I'm here to listen, think, and guide.</div>
+      </div>
+    </div>
+    <!-- Scroll to bottom button -->
+    <div id="scrollBtn" onclick="scrollToBottom()" title="Scroll to latest">↓</div>
+    <!-- Export button -->
+    <div id="exportBtn" onclick="exportChat()" title="Export chat">💾</div>
+    <!-- Smart Topic Suggestions Row -->
+    <div id="smartSuggestBar" class="smart-suggest-bar" style="display:none"></div>
+    <!-- Mood chips — hidden, kept for JS compat -->
+    <div id="moodBar" style="display:none">
+      <div class="chip" onclick="quickSend('I feel sad today')">😢 Sad</div>
+      <div class="chip" onclick="quickSend('I am feeling really happy!')">😄 Happy</div>
+      <div class="chip" onclick="quickSend('I am so stressed right now')">😓 Stressed</div>
+      <div class="chip" onclick="quickSend('I feel very lonely')">💙 Lonely</div>
+      <div class="chip" onclick="quickSend('I feel angry and frustrated')">😡 Angry</div>
+      <div class="chip" onclick="quickSend('I am heartbroken')">💔 Heartbroken</div>
+      <div class="chip" onclick="quickSend('I keep overthinking everything')">🌀 Overthinking</div>
+    </div>
+    <!-- Image Preview Bar -->
+    <div id="imgPreviewBar">
+      <img id="imgPreviewThumb" src="" alt="preview"/>
+      <div class="img-preview-info">
+        <strong>📷 Image ready</strong><br>
+        Type your question below, then tap send ✈️
+      </div>
+      <button class="img-preview-dismiss" onclick="dismissImagePreview()" title="Remove image">✕</button>
+    </div>
+    <div id="inputBar">
+      <div class="input-wrap">
+        <textarea id="userInput" placeholder="Tell Nexora how you feel…" rows="1" maxlength="400"></textarea>
+        <button class="camera-btn" id="cameraBtn" onclick="document.getElementById('cameraInput').click()" title="Solve from image 📷">
+          <svg viewBox="0 0 24 24" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        </button>
+        <button class="study-chat-btn" onclick="generateStudyFromChat()" title="Generate study cards from this chat 📚">
+          <svg viewBox="0 0 24 24" stroke-width="2" fill="none" stroke="currentColor"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+        </button>
+        <button class="voice-quick-btn" onclick="switchToVoice()" title="Switch to Voice Mode 🎙️" id="voiceQuickBtn">
+          <svg viewBox="0 0 24 24" stroke-width="2" fill="none" stroke="currentColor"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+        </button>
+        <button class="voice-toggle" id="voiceToggle" onclick="toggleVoiceInput()" title="Voice input">
+          <svg viewBox="0 0 24 24" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+        </button>
+      </div>
+      <input type="file" id="cameraInput" accept="image/*" hidden onchange="handleImageUpload(event)"/>
+      <button class="send-btn" onclick="sendMessage()">
+        <svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- VOICE SCREEN -->
+  <div class="screen" id="voiceScreen">
+    <div class="voice-topic" id="voiceTopic">VOICE MODE</div>
+
+    <div class="voice-orb-wrap" id="voiceOrbWrap">
+      <!-- Outer ripple rings — animate outward when listening -->
+      <div class="voice-rings" id="voiceRings">
+        <div class="v-ring"></div>
+        <div class="v-ring"></div>
+        <div class="v-ring"></div>
+      </div>
+
+      <!-- Processing arc — orbits outside the orb when thinking -->
+      <div class="orb-process-arc" id="orbProcessArc"></div>
+
+      <!-- Main orb -->
+      <div class="voice-orb" id="voiceOrb" onclick="toggleMic()">
+        <!-- Glass highlight -->
+        <div class="orb-glass-shine"></div>
+        <!-- Inner glow layer -->
+        <div class="orb-inner-glow" id="orbInnerGlow"></div>
+
+        <!-- Mic icon -->
+        <svg class="orb-icon orb-icon-mic" id="voiceOrbIcon" width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.92)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="9" y="2" width="6" height="12" rx="3" fill="rgba(255,255,255,0.15)" stroke="rgba(255,255,255,0.92)"/>
+          <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+          <line x1="12" y1="19" x2="12" y2="23"/>
+          <line x1="8" y1="23" x2="16" y2="23"/>
+        </svg>
+
+        <!-- Waveform bars — shown when listening -->
+        <div class="orb-waveform" id="orbWaveform">
+          <span></span><span></span><span></span><span></span><span></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- State label — changes per state -->
+    <div class="voice-state-label" id="voiceStateLabel">idle</div>
+
+    <!-- Primary CTA -->
+    <div class="voice-prompt" id="voicePrompt">
+      Tap the orb to start
+    </div>
+
+    <!-- Hint — secondary, smaller -->
+    <div class="voice-greeting">💡 Start with <strong>"Hello"</strong></div>
+
+    <div class="voice-controls">
+      <div class="vc-btn" onclick="switchToChat()" title="Back to chat">
+        <svg viewBox="0 0 24 24" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      </div>
+      <button class="voice-call-btn" id="voiceCallBtn" onclick="toggleVoiceCall()">📞 Start Call</button>
+      <button class="mic-btn" id="micBtn" onclick="toggleMic()" title="Toggle mic">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round">
+          <rect x="9" y="2" width="6" height="12" rx="3" fill="rgba(255,255,255,0.2)" stroke="white"/>
+          <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+          <line x1="12" y1="19" x2="12" y2="23"/>
+          <line x1="8" y1="23" x2="16" y2="23"/>
+        </svg>
+      </button>
+      <div class="vc-btn" onclick="stopSpeaking()" title="Stop speaking">
+        <svg viewBox="0 0 24 24" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- STUDY MODE SCREEN -->
+  <div class="screen" id="studyScreen">
+
+    <!-- Header bar -->
+    <div class="study-header">
+      <div class="study-header-top">
+        <button class="study-back-btn" onclick="_studyHandleBack()">
+          <svg viewBox="0 0 24 24" stroke-width="2.2" fill="none" stroke="currentColor" width="20" height="20"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div class="study-header-actions">
+          <button class="study-ai-pill" id="studyAIPill" onclick="toggleStudyAIPicker()">
+            <span id="studyAIPillDot" class="study-ai-dot"></span>
+            <span id="studyAIPillLabel">Gemini</span>
+            <svg viewBox="0 0 24 24" stroke-width="2" fill="none" stroke="currentColor" width="12" height="12"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <button class="study-close-btn" onclick="closeStudyMode()">✕</button>
+        </div>
+      </div>
+      <div class="study-header-hero">
+        <div class="study-header-text">
+          <h1 class="study-hero-title">Explore Nexora</h1>
+          <p class="study-hero-sub">All your AI tools, one beautiful space</p>
+        </div>
+        <!-- Streak badge — top right of hero -->
+        <span class="study-streak-badge" id="studyStreakBadge">🔥 <span id="studyStreakCount">0</span> day streak</span>
+      </div>
+      <!-- Compact mode chip — shown when grid is collapsed -->
+      <button class="study-mode-chip" id="studyModeChip" onclick="_expandStudyGrid()" style="display:none" title="Change mode">
+        <span class="smc-chip-icon" id="studyModeChipIcon">🃏</span>
+        <span class="smc-chip-label" id="studyModeChipLabel">Flashcards</span>
+        <svg viewBox="0 0 24 24" stroke-width="2" fill="none" stroke="currentColor" width="10" height="10"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      </button>
+    </div>
+
+    <!-- AI picker dropdown -->
+    <div class="study-ai-picker" id="studyAIPicker" style="display:none">
+      <div class="study-ai-picker-title">Choose AI for Study Mode</div>
+      <div class="study-ai-picker-grid" id="studyAIPickerGrid"></div>
+    </div>
+
+    <!-- Collapsible zone: source card + mode grid + stats -->
+    <div class="study-collapsible" id="studyCollapsible">
+
+      <div class="explore-showcase">
+        <div class="explore-model-pills">
+          <button class="explore-pill active">● Claude</button>
+          <button class="explore-pill cyan">● Gemini</button>
+          <button class="explore-pill green">● GPT-4o</button>
+          <button class="explore-pill amber">● Llama</button>
+        </div>
+
+        <div class="explore-chat-hero">
+          <div class="explore-live-badge">● LIVE NOW</div>
+          <h2 class="explore-chat-title">Chat with <span>Nexora ✦</span></h2>
+          <p class="explore-chat-copy">Your AI bestie — listens, thinks and guides you through anything, anytime.</p>
+          <div class="explore-chat-preview">
+            <div class="explore-chat-preview-icon">✦</div>
+            <div class="explore-chat-preview-text">"Ready to crush some goals today?"</div>
+          </div>
+          <div class="explore-chat-actions">
+            <button class="explore-start-btn" onclick="window._exploreOpenChat && window._exploreOpenChat()">Start Chatting →</button>
+            <button class="explore-voice-btn" onclick="switchToVoice()">🎙️ Voice</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="study-source-shell">
+        <div class="study-source-card">
+          <div class="study-source-title">STUDY SOURCE</div>
+          <div class="study-source-sub" id="studySourceSub">Upload an image or PDF, then tell Nexora what to make from it.</div>
+
+          <!-- Notes / Podcast pill tabs -->
+          <div class="study-source-actions">
+            <button class="study-source-action" onclick="generateStudyNotes(); _studySetSourceAction(this)">📝 Notes</button>
+            <button class="study-source-action" onclick="generateStudyPodcast(); _studySetSourceAction(this)">🎙️ Podcast</button>
+          </div>
+
+          <!-- Add File — full width teal button -->
+          <button class="study-addfile-btn" onclick="document.getElementById('studyFileInput').click()">
+            🔗 Add File
+          </button>
+          <input type="file" id="studyFileInput" accept="image/*,.pdf,application/pdf" hidden onchange="handleStudyFileUpload(event)"/>
+
+          <div class="study-upload-preview" id="studyUploadPreview" style="display:none">
+            <img id="studyUploadThumb" class="study-upload-thumb" alt="study upload preview" style="display:none"/>
+            <div class="study-upload-info">
+              <div class="study-upload-name" id="studyUploadName"></div>
+              <div class="study-upload-meta" id="studyUploadMeta"></div>
+            </div>
+            <button class="study-upload-remove" onclick="clearStudyUpload()">✕</button>
+          </div>
+        </div>
+
+        <div class="study-output-panel" id="studyOutputPanel" style="display:none">
+          <div class="study-output-header">
+            <span id="studyOutputTitle">Study Output</span>
+            <div class="study-output-actions">
+              <button class="study-output-btn" onclick="copyStudyOutput(this)">Copy</button>
+              <button class="study-output-btn" onclick="closeStudyOutput()">Close</button>
+            </div>
+          </div>
+          <div class="study-output-body" id="studyOutputBody"></div>
+        </div>
+      </div>
+
+      <!-- Mode grid — mockup layout -->
+      <div class="study-mode-grid">
+
+        <!-- Row 1: Flashcards — full width -->
+        <button class="study-mode-card study-tab smc-wide" id="stab-flashcard" onclick="switchStudyTab('flashcard')">
+          <span class="smc-icon">🃏</span>
+          <span class="smc-body">
+            <span class="smc-label">Flashcards</span>
+            <span class="smc-sub">Spaced repetition · AI-generated</span>
+            <span class="smc-sub">Build long-term memory with smart decks</span>
+            <span class="smc-progress-wrap"><span class="smc-progress-bar" style="width:60%"></span><span class="smc-progress-pct">60%</span></span>
+          </span>
+        </button>
+
+        <!-- Row 2: AI Tutor — full width -->
+        <button class="study-mode-card study-tab smc-wide" id="stab-viva" onclick="switchStudyTab('viva')">
+          <span class="smc-icon">🧠</span>
+          <span class="smc-body">
+            <span class="smc-label">AI Tutor</span>
+            <span class="smc-sub">Socratic · Adaptive · Personalized</span>
+            <span class="smc-sub">Learn any subject with guided questions</span>
+            <span class="smc-live-badge">● LIVE</span>
+          </span>
+        </button>
+
+        <!-- Row 3: MCQ Quiz + Listen — 2-col -->
+        <button class="study-mode-card study-tab smc-half" id="stab-quiz" onclick="switchStudyTab('quiz')">
+          <span class="smc-icon">✏️</span>
+          <span class="smc-body">
+            <span class="smc-label">MCQ Quiz</span>
+            <span class="smc-sub">Smart questions</span>
+          </span>
+        </button>
+        <button class="study-mode-card study-tab smc-half" id="stab-podcast" onclick="switchToVoice()">
+          <span class="smc-icon">🎧</span>
+          <span class="smc-body">
+            <span class="smc-label">Voice Mode</span>
+            <span class="smc-sub">Speak to Nexora naturally</span>
+          </span>
+        </button>
+
+        <!-- Row 4: BCS Exam Decks — full width -->
+        <button class="study-mode-card study-tab smc-wide" id="stab-mcq" onclick="switchStudyTab('mcq')">
+          <span class="smc-icon">🇧🇩</span>
+          <span class="smc-body">
+            <span class="smc-label">BCS Exam Decks</span>
+            <span class="smc-sub">Bangladesh Civil Service · 2,000+ Q&amp;A</span>
+            <span class="smc-sub">Bangla &amp; English · Prelim &amp; Written</span>
+          </span>
+          <span class="srs-due-badge" id="mcqDueBadge" style="display:none">0</span>
+        </button>
+
+        <!-- Row 5: IELTS Prep — full width -->
+        <button class="study-mode-card study-tab smc-wide" id="stab-ielts" onclick="switchStudyTab('ielts')">
+          <span class="smc-icon">📖</span>
+          <span class="smc-body">
+            <span class="smc-label">IELTS Prep</span>
+            <span class="smc-sub">Reading · Writing · Speaking · Listening</span>
+          </span>
+        </button>
+
+        <!-- Row 6: Review + Summarize + Notebook — 3-col compact -->
+        <button class="study-mode-card study-tab smc-third" id="stab-srs" onclick="switchStudyTab('srs')">
+          <span class="smc-icon">🔁</span>
+          <span class="smc-body"><span class="smc-label">Review</span></span>
+          <span class="srs-due-badge" id="srsDueBadge" style="display:none">0</span>
+        </button>
+        <button class="study-mode-card study-tab smc-third" id="stab-summarizer" onclick="switchStudyTab('summarizer')">
+          <span class="smc-icon">📄</span>
+          <span class="smc-body"><span class="smc-label">Summarize</span></span>
+        </button>
+        <button class="study-mode-card study-tab smc-third" id="stab-notebook" onclick="switchStudyTab('notebook')">
+          <span class="smc-icon">📓</span>
+          <span class="smc-body"><span class="smc-label">Notebook</span></span>
+        </button>
+
+      </div>
+
+      <!-- Stats row -->
+      <div class="study-stats-row">
+        <div class="study-stat-card">
+          <div class="study-stat-val" id="statCards">0</div>
+          <div class="study-stat-label">CARDS</div>
+        </div>
+        <div class="study-stat-card">
+          <div class="study-stat-val" id="statQuizzes">0</div>
+          <div class="study-stat-label">QUIZZES</div>
+        </div>
+        <div class="study-stat-card">
+          <div class="study-stat-val" id="statStreak">0 🔥</div>
+          <div class="study-stat-label">STREAK</div>
+        </div>
+      </div>
+
+    </div><!-- /study-collapsible -->
+
+    <!-- Hidden tab bar (kept for JS compat — zero layout footprint) -->
+    <div class="study-tab-bar" style="display:none;padding:0;margin:0;border:none;height:0;overflow:hidden" aria-hidden="true"></div>
+
+    <!-- ═══ FLASHCARD TAB ═══ -->
+    <div class="study-panel" id="spanel-flashcard">
+
+      <div class="study-input-section">
+        <div class="study-input-label">Topic or paste text to generate cards</div>
+        <textarea id="fcTopicInput" class="study-textarea"
+          placeholder="e.g. Merge Sort, Photosynthesis, World War 2 causes…"
+          rows="3" maxlength="800"></textarea>
+        <div class="study-input-row">
+          <select id="fcCountSelect" class="study-select">
+            <option value="5">5 cards</option>
+            <option value="8" selected>8 cards</option>
+            <option value="12">12 cards</option>
+            <option value="15">15 cards</option>
+          </select>
+          <select id="fcLangSelect" class="study-select">
+            <option value="english">English</option>
+            <option value="bangla">বাংলা</option>
+            <option value="banglish">Banglish</option>
+          </select>
+          <button class="study-gen-btn" id="fcGenBtn" onclick="generateFlashcards()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            Generate
+          </button>
+        </div>
+      </div>
+
+      <!-- Deck / carousel area -->
+      <div id="fcDeckArea" style="display:none">
+        <div class="fc-deck-meta">
+          <span id="fcDeckTopic" class="fc-deck-topic-tag"></span>
+          <span id="fcDeckProgress" class="fc-progress-text">1 / 8</span>
+          <button class="fc-save-all-btn" id="fcSaveAllBtn" onclick="saveAllFlashcards()">💾 Save All</button>
+        </div>
+        <!-- Card -->
+        <div class="fc-card-wrap" id="fcCardWrap">
+          <div class="fc-card" id="fcCard" onclick="flipFlashcard()">
+            <div class="fc-card-inner" id="fcCardInner">
+              <div class="fc-card-face front" id="fcFront">
+                <div class="fc-card-label">QUESTION</div>
+                <div class="fc-card-text" id="fcFrontText"></div>
+                <div class="fc-hint-row" id="fcHintRow" style="display:none">
+                  <button class="fc-hint-btn" onclick="event.stopPropagation();showFlashcardHint()">💡 Show hint</button>
+                  <span class="fc-hint-text" id="fcHintText" style="display:none"></span>
+                </div>
+                <div class="fc-tap-hint">tap to flip</div>
+              </div>
+              <div class="fc-card-face back" id="fcBack">
+                <div class="fc-card-label">ANSWER</div>
+                <div class="fc-card-text" id="fcBackText"></div>
+                <button class="fc-explain-btn" onclick="event.stopPropagation();explainFlashcard()" id="fcExplainBtn">🧠 Ask AI to explain</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Navigation -->
+        <div class="fc-nav">
+          <button class="fc-nav-btn" onclick="fcNav(-1)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <div class="fc-dots" id="fcDots"></div>
+          <button class="fc-nav-btn" onclick="fcNav(1)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+        <!-- Per-card actions -->
+        <div class="fc-card-actions">
+          <button class="fc-action-btn save" onclick="saveSingleCard()" title="Save this card to Review deck">💾 Save card</button>
+          <button class="fc-action-btn flip-all" onclick="toggleFlipAll()" id="fcFlipAllBtn" title="Reverse mode: answer → question">🔄 Reverse</button>
+        </div>
+      </div>
+
+      <!-- AI Explain panel (slides in) -->
+      <div class="fc-explain-panel" id="fcExplainPanel" style="display:none">
+        <div class="fc-explain-header">
+          <span>🧠 AI Explanation</span>
+          <button onclick="closeExplainPanel()">✕</button>
+        </div>
+        <div class="fc-explain-body" id="fcExplainBody"></div>
+      </div>
+
+      <!-- Saved decks -->
+      <div class="study-saved-section" id="fcSavedSection">
+        <div class="study-saved-title">💾 Saved Decks</div>
+        <div id="fcSavedList" class="fc-saved-list"></div>
+      </div>
+    </div>
+
+    <!-- ═══ QUIZ TAB ═══ -->
+    <div class="study-panel" id="spanel-quiz">
+
+      <div class="study-input-section" id="quizSetup">
+        <div class="study-input-label">Quiz topic</div>
+        <textarea id="quizTopicInput" class="study-textarea"
+          placeholder="e.g. Binary Search Trees, The French Revolution, Ohm's Law…"
+          rows="2" maxlength="400"></textarea>
+        <div class="study-input-row">
+          <select id="quizCountSelect" class="study-select">
+            <option value="3">3 questions</option>
+            <option value="5" selected>5 questions</option>
+            <option value="8">8 questions</option>
+          </select>
+          <select id="quizDiffSelect" class="study-select">
+            <option value="easy">Easy</option>
+            <option value="medium" selected>Medium</option>
+            <option value="hard">Hard</option>
+          </select>
+          <button class="study-gen-btn" id="quizGenBtn" onclick="generateQuiz()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            Generate
+          </button>
+        </div>
+      </div>
+
+      <!-- Active quiz -->
+      <div id="quizActive" style="display:none">
+        <div class="quiz-header-row">
+          <span class="quiz-q-counter" id="quizQCounter">Q 1 / 5</span>
+          <div class="quiz-progress-bar"><div class="quiz-progress-fill" id="quizProgressFill"></div></div>
+          <span class="quiz-score-live" id="quizScoreLive">0 pts</span>
+        </div>
+        <div class="quiz-question" id="quizQuestion"></div>
+        <div class="quiz-options" id="quizOptions"></div>
+        <button class="quiz-next-btn" id="quizNextBtn" onclick="quizNext()" style="display:none">Next →</button>
+      </div>
+
+      <!-- Quiz review / results -->
+      <div id="quizReview" style="display:none">
+        <div class="quiz-result-header">
+          <div class="quiz-result-emoji" id="quizResultEmoji">🎉</div>
+          <div class="quiz-result-score" id="quizResultScore"></div>
+          <div class="quiz-result-sub" id="quizResultSub"></div>
+        </div>
+        <div class="quiz-review-list" id="quizReviewList"></div>
+        <div class="quiz-result-actions">
+          <button class="quiz-retake-btn" onclick="retakeQuiz()">🔁 Retake</button>
+          <button class="quiz-new-btn" onclick="newQuiz()">✨ New Quiz</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ SPACED REP TAB ═══ -->
+    <div class="study-panel" id="spanel-srs">
+
+      <div id="srsEmpty" style="display:none">
+        <div class="study-empty-state">
+          <div class="study-empty-icon">🌱</div>
+          <div class="study-empty-title">No cards saved yet</div>
+          <div class="study-empty-sub">Generate flashcards and tap 💾 Save to build your review deck.</div>
+          <button class="study-gen-btn" style="margin-top:12px" onclick="switchStudyTab('flashcard')">Go to Flashcards</button>
+        </div>
+      </div>
+
+      <div id="srsAllDone" style="display:none">
+        <div class="study-empty-state">
+          <div class="study-empty-icon">✅</div>
+          <div class="study-empty-title">All caught up!</div>
+          <div class="study-empty-sub" id="srsNextDueText">No cards due right now. Come back tomorrow.</div>
+          <button class="srs-browse-btn" onclick="srsBrowseAll()">Browse all cards</button>
+        </div>
+      </div>
+
+      <!-- Review session -->
+      <div id="srsSession" style="display:none">
+        <div class="srs-session-header">
+          <span id="srsSessionCount" class="srs-session-count">12 cards due</span>
+          <span id="srsStreakBadge" class="srs-streak" style="display:none">🔥 <span id="srsStreakNum">0</span>-day streak</span>
+        </div>
+        <div class="fc-card-wrap">
+          <div class="fc-card" id="srsCard" onclick="flipSrsCard()">
+            <div class="fc-card-inner" id="srsCardInner">
+              <div class="fc-card-face front" id="srsFront">
+                <div class="fc-card-label">QUESTION</div>
+                <div class="fc-card-text" id="srsFrontText"></div>
+                <div class="fc-tap-hint">tap to flip</div>
+              </div>
+              <div class="fc-card-face back" id="srsBack">
+                <div class="fc-card-label">ANSWER</div>
+                <div class="fc-card-text" id="srsBackText"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Rating buttons — only shown after flip -->
+        <div class="srs-rating-row" id="srsRatingRow" style="display:none">
+          <button class="srs-rate-btn hard" onclick="rateSrsCard(0)">😕<br><span>Hard</span></button>
+          <button class="srs-rate-btn medium" onclick="rateSrsCard(1)">🤔<br><span>Okay</span></button>
+          <button class="srs-rate-btn easy" onclick="rateSrsCard(2)">😊<br><span>Easy</span></button>
+        </div>
+      </div>
+
+      <!-- Browse all (shown when srsAllDone browse is tapped) -->
+      <div id="srsBrowsePanel" style="display:none">
+        <div class="srs-browse-header">
+          <span>All saved cards</span>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <button class="srs-anki-btn" onclick="exportToAnki()" title="Export all to Anki">📥 Anki</button>
+            <button onclick="closeSrsBrowse()">✕</button>
+          </div>
+        </div>
+        <div id="srsBrowseList" class="srs-browse-list"></div>
+      </div>
+    </div>
+
+    <!-- ═══ SUMMARIZER TAB ═══ -->
+    <div class="study-panel" id="spanel-summarizer">
+      <div class="study-input-section">
+        <div class="study-input-label">Paste text, lecture notes, or article to summarize</div>
+        <textarea id="summarizerInput" class="study-textarea"
+          placeholder="Paste any text here — lecture notes, articles, textbook excerpts…"
+          rows="5" maxlength="6000"></textarea>
+        <div class="study-input-row" style="flex-wrap:wrap;gap:8px;margin-top:10px">
+          <select id="summarizerMode" class="study-select">
+            <option value="bullet">Bullet Points</option>
+            <option value="paragraph">Paragraph</option>
+            <option value="eli5">Explain Simply</option>
+            <option value="key">Key Terms</option>
+            <option value="tldr">TL;DR</option>
+          </select>
+          <label class="sum-compare-label">
+            <input type="checkbox" id="summarizerCompare"> Compare 2 models
+          </label>
+          <button class="study-gen-btn" id="summarizerRunBtn" onclick="runSummarizer()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            Summarize
+          </button>
+        </div>
+      </div>
+      <div id="summarizerOutput" style="display:none;margin-top:4px;padding:0 4px 80px"></div>
+    </div>
+
+    <!-- ═══ VIVA TAB ═══ -->
+    <div class="study-panel" id="spanel-viva">
+      <div id="vivaSetup">
+        <div class="study-input-section">
+          <div class="study-input-label">Mock Oral Exam — Viva Mode 🎤</div>
+          <div style="font-size:12px;color:var(--text3);margin-bottom:10px">AI will ask you questions one by one, then critique each answer with a score. Great for exam prep!</div>
+          <textarea id="vivaTopicInput" class="study-textarea"
+            placeholder="e.g. Data Structures, The French Revolution, Organic Chemistry…"
+            rows="2" maxlength="200"></textarea>
+          <div class="study-input-row" style="margin-top:10px">
+            <select id="vivaQCount" class="study-select">
+              <option value="3">3 questions</option>
+              <option value="5" selected>5 questions</option>
+              <option value="8">8 questions</option>
+            </select>
+            <select id="vivaLevel" class="study-select">
+              <option value="high school">High School</option>
+              <option value="undergraduate" selected>Undergraduate</option>
+              <option value="postgraduate">Postgraduate</option>
+            </select>
+            <button class="study-gen-btn" id="vivaStartBtn" onclick="startViva()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+              Start Exam
+            </button>
+          </div>
+        </div>
+      </div>
+      <div id="vivaSession" style="display:none;padding:12px 4px">
+        <div class="viva-progress-row">
+          <span class="viva-progress-label" id="vivaProgress">Q1 of 5</span>
+          <div class="viva-progress-track"><div class="viva-progress-fill" id="vivaProgressFill" style="width:0%"></div></div>
+        </div>
+        <div class="viva-question-card">
+          <div class="viva-q-label">EXAMINER</div>
+          <div class="viva-question-text" id="vivaQuestion"></div>
+        </div>
+        <div class="viva-answer-section">
+          <div class="viva-answer-label">Your Answer</div>
+          <textarea id="vivaAnswerInput" class="study-textarea viva-answer-input"
+            placeholder="Type your answer here, or tap the mic to speak…"
+            rows="4" maxlength="2000"></textarea>
+          <div id="vivaSubmitRow" style="display:flex;gap:8px;margin-top:8px;align-items:center">
+            <button class="viva-mic-btn" id="vivaMicBtn" onclick="vivaToggleMic()" title="Voice input">🎤</button>
+            <button class="study-gen-btn" id="vivaSubmitBtn" onclick="submitVivaAnswer()" style="flex:1">✅ Submit Answer</button>
+          </div>
+        </div>
+        <div class="viva-critique-card" id="vivaCritique" style="display:none">
+          <div class="viva-critique-header">
+            <span class="viva-critique-label">Examiner's Feedback</span>
+            <span class="viva-score-badge" id="vivaCritiqueScore">0/10</span>
+          </div>
+          <div class="viva-critique-text" id="vivaCritiqueText"></div>
+        </div>
+        <div id="vivaNextRow" style="display:none;margin-top:12px">
+          <button class="study-gen-btn" onclick="vivaNext()" style="width:100%">Next Question →</button>
+        </div>
+      </div>
+      <div id="vivaResults" style="display:none;padding:12px 4px">
+        <div class="viva-result-header">
+          <div class="viva-result-grade" id="vivaGrade">Merit 🌟</div>
+          <div class="viva-result-score" id="vivaFinalScore">72%</div>
+          <div class="viva-result-topic" id="vivaFinalTopic"></div>
+        </div>
+        <div class="viva-review-list" id="vivaReviewList"></div>
+        <div style="display:flex;gap:8px;margin-top:16px;padding-bottom:80px">
+          <button class="quiz-retake-btn" onclick="vivaRetry()" style="flex:1">🔁 New Viva</button>
+          <button class="quiz-new-btn" onclick="exportVivaToPDF()" style="flex:1">📄 Export PDF</button>
+        </div>
+      </div>
+    </div><!-- /spanel-viva -->
+
+    <!-- ═══ PODCAST / LISTEN MODE TAB ═══ -->
+    <div class="study-panel" id="spanel-podcast">
+
+      <!-- ─── SETUP STATE ─── -->
+      <div id="podcastSetup">
+        <div class="study-input-section podcast-hero">
+          <div class="podcast-hero-icon">🎧</div>
+          <div class="podcast-hero-title">Listen Mode</div>
+          <div class="podcast-hero-sub">Turn any topic or document into a podcast</div>
+        </div>
+
+        <!-- ── Notebook Sources ── -->
+        <div class="nb-sources-section study-input-section" style="margin-top:12px">
+          <div class="nb-sources-header">
+            <div class="study-input-label" style="margin-bottom:0">📎 Notebook Sources</div>
+            <div class="nb-sources-actions">
+              <label class="nb-add-file-btn" for="nbFileInput" title="Add files">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                Add files
+                <input type="file" id="nbFileInput" multiple accept=".txt,.md,.markdown,.pdf,.docx,.jpg,.jpeg,.png,.webp,.gif" style="display:none">
+              </label>
+              <button id="nbClearSourcesBtn" class="nb-clear-btn" title="Clear all sources">🗑️ Clear</button>
+            </div>
+          </div>
+          <div id="nbSourceListContainer" class="nb-source-list"></div>
+          <!-- Notebook save/load row -->
+          <div class="nb-notebook-row">
+            <button id="nbSaveBtn" class="nb-action-btn">💾 Save Notebook</button>
+            <button id="nbLoadBtn" class="nb-action-btn">📂 My Notebooks</button>
+          </div>
+          <!-- Notebook library (hidden by default) -->
+          <div id="nbLibraryPanel" class="nb-library-panel" style="display:none">
+            <div class="nb-library-title">📓 Saved Notebooks</div>
+            <div id="nbLibraryList" class="nb-library-list"></div>
+          </div>
+        </div>
+
+        <div class="study-input-section" style="margin-top:8px">
+          <div class="study-input-label">Topic <span style="color:var(--text3)">or upload a document below</span></div>
+          <textarea id="podcastTopicInput" class="study-textarea"
+            placeholder="e.g. Operating Systems, Photosynthesis, French Revolution…"
+            rows="2" maxlength="300"></textarea>
+          <div class="podcast-or-divider"><span>or single file</span></div>
+          <label class="podcast-upload-label" for="podcastFileInput">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <span id="podcastUploadLabel">Upload file (TXT, MD, PDF…)</span>
+            <input type="file" id="podcastFileInput" accept=".txt,.md,.markdown,.pdf,.docx" style="display:none"
+              onchange="document.getElementById('podcastUploadLabel').textContent = this.files[0]?.name || 'Upload file'">
+          </label>
+          <div class="study-input-row" style="margin-top:12px;flex-wrap:wrap;gap:8px">
+            <select id="podcastStyle" class="study-select">
+              <option value="dialogue">🎙️ Dialogue (2 voices)</option>
+              <option value="monologue">📢 Monologue (1 voice)</option>
+            </select>
+            <select id="podcastLength" class="study-select">
+              <option value="short">Short (~3 min)</option>
+              <option value="medium" selected>Medium (~6 min)</option>
+              <option value="long">Long (~10 min)</option>
+            </select>
+            <select id="nbPodcastLang" class="study-select" title="Podcast language">
+              <option value="english">🌐 English</option>
+              <option value="bangla">🇧🇩 Bangla</option>
+              <option value="hindi">🇮🇳 Hindi</option>
+              <option value="spanish">🇪🇸 Spanish</option>
+              <option value="french">🇫🇷 French</option>
+              <option value="arabic">🇸🇦 Arabic</option>
+              <option value="portuguese">🇧🇷 Portuguese</option>
+              <option value="german">🇩🇪 German</option>
+              <option value="japanese">🇯🇵 Japanese</option>
+              <option value="chinese">🇨🇳 Chinese</option>
+            </select>
+            <button class="study-gen-btn podcast-gen-btn" id="nbGeneratePodcastBtn" onclick="generateNotebookPodcast()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              Generate Podcast
+            </button>
+          </div>
+          <!-- Quick actions row -->
+          <div class="nb-quick-actions">
+            <button id="nbMakeFlashcardsBtn" class="nb-quick-btn" title="Make flashcards from notebook sources">🃏 Flashcards</button>
+            <button id="nbVoiceCmdBtn" class="nb-quick-btn" title="Voice commands (play, pause, ask…)">🎤 Voice</button>
+            <button onclick="exportNotebookAsMarkdown()" class="nb-quick-btn" title="Export notebook as Markdown">📄 Export</button>
+          </div>
+        </div>
+        <div class="podcast-library">
+          <div class="podcast-library-title">🎧 My Podcasts</div>
+          <div id="podcastLibraryList"><div class="podcast-lib-empty">Your generated podcasts will appear here</div></div>
+        </div>
+      </div>
+
+      <!-- ─── GENERATING STATE ─── -->
+      <div id="podcastGeneratingState" style="display:none">
+        <div class="podcast-generating-wrap">
+          <div class="podcast-gen-orb">
+            <div class="podcast-gen-ring r1"></div>
+            <div class="podcast-gen-ring r2"></div>
+            <div class="podcast-gen-ring r3"></div>
+            <div class="podcast-gen-icon">🎧</div>
+          </div>
+          <div class="podcast-status-text" id="podcastStatusText">🧠 Writing script…</div>
+          <div class="podcast-gen-progress-track">
+            <div class="podcast-gen-progress-fill" id="podcastProgressFill" style="width:0%"></div>
+          </div>
+          <div class="podcast-gen-steps">
+            <div class="podcast-gen-step">🧠 Script</div>
+            <div class="podcast-gen-step-arrow">→</div>
+            <div class="podcast-gen-step">🎙️ Voices</div>
+            <div class="podcast-gen-step-arrow">→</div>
+            <div class="podcast-gen-step">🎵 Player</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── PLAYER STATE ─── -->
+      <div id="podcastPlayer" style="display:none">
+        <div class="podcast-player-card">
+          <div class="podcast-player-visual">
+            <div class="podcast-wave">
+              <span></span><span></span><span></span><span></span><span></span>
+              <span></span><span></span><span></span><span></span><span></span>
+            </div>
+          </div>
+          <div class="podcast-player-meta">
+            <div class="podcast-player-title" id="podcastPlayerTitle">📻 Study Podcast</div>
+            <div class="podcast-player-info-row">
+              <span class="podcast-player-info" id="podcastPlayerInfo">Loading…</span>
+              <span class="podcast-tts-badge" id="podcastTTSBadge">🔊 Web Speech</span>
+            </div>
+          </div>
+          <div class="podcast-speed-row">
+            <span class="podcast-speed-label">Speed</span>
+            <select id="podcastSpeed" class="podcast-speed-select" onchange="podcastSetSpeed(this.value)">
+              <option value="0.8">0.8x</option>
+              <option value="1" selected>1x</option>
+              <option value="1.25">1.25x</option>
+              <option value="1.5">1.5x</option>
+              <option value="2">2x</option>
+            </select>
+          </div>
+          <div class="podcast-seek-row">
+            <span class="podcast-time" id="podcastCurrentTime">0:00</span>
+            <div class="podcast-seek-track"><div class="podcast-seek-fill" id="podcastSeekFill" style="width:0%"></div></div>
+            <span class="podcast-time" id="podcastTotalTime">0:00</span>
+          </div>
+          <div class="podcast-controls">
+            <button class="podcast-ctrl-btn secondary" onclick="podcastStop()">
+              <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+            </button>
+            <button class="podcast-ctrl-btn primary" id="podcastPlayBtn" onclick="podcastPlay()">
+              <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            </button>
+            <button class="podcast-ctrl-btn primary" id="podcastPauseBtn" onclick="podcastPause()" style="display:none">
+              <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+            </button>
+            <button class="podcast-ctrl-btn secondary" onclick="podcastRestart()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.28"/></svg>
+            </button>
+          </div>
+          <div class="podcast-action-row">
+            <button class="podcast-action-btn" onclick="podcastDownload()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Script
+            </button>
+            <button class="podcast-action-btn" onclick="exportNotebookAsMarkdown()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              Export
+            </button>
+            <button class="podcast-action-btn" onclick="podcastBackToSetup()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+              New
+            </button>
+          </div>
+        </div>
+        <div class="podcast-transcript-wrap">
+          <div class="podcast-transcript-title">📝 Transcript</div>
+          <div class="podcast-transcript" id="podcastTranscript"></div>
+        </div>
+
+        <!-- ── RAG Chat ── -->
+        <div class="nb-rag-section">
+          <div class="nb-rag-title">🧠 Ask about this notebook</div>
+          <div class="nb-rag-input-row">
+            <input type="text" id="nbRagQuestionInput" class="nb-rag-input"
+              placeholder="e.g. What were the main points about X?">
+            <button id="nbAskRagBtn" class="nb-rag-ask-btn">Ask</button>
+          </div>
+          <div id="nbRagAnswerArea" class="nb-rag-answer-area" style="display:none"></div>
+          <!-- Shortcut hints -->
+          <div id="nbShortcutHints" class="nb-shortcut-hints-row"></div>
+        </div>
+
+      </div>
+
+    </div><!-- /spanel-podcast -->
+
+    <!-- ═══ NOTEBOOK TAB ═══ -->
+    <div class="study-panel" id="spanel-notebook">
+      <div class="nb-standalone-wrap">
+
+        <!-- Header -->
+        <div class="study-input-section podcast-hero" style="padding-bottom:8px">
+          <div class="podcast-hero-icon">📓</div>
+          <div class="podcast-hero-title">Notebook</div>
+          <div class="podcast-hero-sub">Multi-source study companion — upload, ask, listen</div>
+        </div>
+
+        <!-- Sources -->
+        <div class="nb-sources-section study-input-section" style="margin-top:8px">
+          <div class="nb-sources-header">
+            <div class="study-input-label" style="margin-bottom:0">📎 Sources</div>
+            <div class="nb-sources-actions">
+              <label class="nb-add-file-btn" for="nbFileInput2" title="Add files">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                Add files
+                <input type="file" id="nbFileInput2" multiple accept=".txt,.md,.markdown,.pdf,.docx,.jpg,.jpeg,.png,.webp,.gif" style="display:none"
+                  onchange="Array.from(this.files).forEach(f => addNotebookSource(f)); this.value=''">
+              </label>
+              <button onclick="clearNotebookSources()" class="nb-clear-btn">🗑️ Clear</button>
+            </div>
+          </div>
+          <div id="nbSourceListContainer2" class="nb-source-list"></div>
+        </div>
+
+        <!-- Notebook title + save/load -->
+        <div class="study-input-section" style="margin-top:8px">
+          <div class="study-input-label">Notebook title</div>
+          <input type="text" id="nbTitleInput" class="study-textarea" style="height:auto;padding:10px 12px"
+            placeholder="e.g. Biology Chapter 5, History Essay…" maxlength="120">
+          <div class="nb-notebook-row" style="margin-top:10px">
+            <button onclick="saveCurrentNotebook()" class="nb-action-btn">💾 Save</button>
+            <button onclick="generateNotebookPodcast()" class="nb-action-btn nb-action-btn-primary">🎧 Generate Podcast</button>
+            <button onclick="exportNotebookAsMarkdown()" class="nb-action-btn" title="Export as Markdown">📄 Export</button>
+          </div>
+          <!-- Language + flashcards row -->
+          <div class="nb-notebook-row" style="margin-top:8px">
+            <select id="nbPodcastLang2" class="study-select" style="flex:1"
+              onchange="document.getElementById('nbPodcastLang') && (document.getElementById('nbPodcastLang').value=this.value)">
+              <option value="english">🌐 English</option>
+              <option value="bangla">🇧🇩 Bangla</option>
+              <option value="hindi">🇮🇳 Hindi</option>
+              <option value="spanish">🇪🇸 Spanish</option>
+              <option value="french">🇫🇷 French</option>
+              <option value="arabic">🇸🇦 Arabic</option>
+              <option value="portuguese">🇧🇷 Portuguese</option>
+              <option value="german">🇩🇪 German</option>
+              <option value="japanese">🇯🇵 Japanese</option>
+              <option value="chinese">🇨🇳 Chinese</option>
+            </select>
+            <button onclick="generateFlashcardsFromNotebook()" class="nb-action-btn" style="flex:1">🃏 Flashcards</button>
+          </div>
+        </div>
+
+        <!-- RAG Chat -->
+        <div class="nb-rag-section" style="margin-top:4px">
+          <div class="nb-rag-title">🧠 Ask your notebook</div>
+          <div class="nb-rag-input-row">
+            <input type="text" id="nbRagQuestionInput2" class="nb-rag-input"
+              placeholder="Ask anything about your sources…"
+              onkeypress="if(event.key==='Enter'){askNotebook(this.value.trim());this.value=''}">
+            <button class="nb-rag-ask-btn"
+              onclick="askNotebook(document.getElementById('nbRagQuestionInput2').value.trim()); document.getElementById('nbRagQuestionInput2').value=''">Ask</button>
+          </div>
+          <div id="nbRagAnswerArea2" class="nb-rag-answer-area" style="display:none"></div>
+        </div>
+
+        <!-- Saved notebooks -->
+        <div class="nb-sources-section study-input-section" style="margin-top:8px">
+          <div class="nb-sources-header">
+            <div class="study-input-label" style="margin-bottom:0">📚 Saved Notebooks</div>
+          </div>
+          <div id="nbLibraryList2" class="nb-library-list" style="margin-top:8px; padding-bottom:80px"></div>
+        </div>
+
+      </div>
+    </div><!-- /spanel-notebook -->
+
+    <!-- ═══ BCS PREP / MCQ BANK TAB ═══ -->
+    <div class="study-panel" id="spanel-mcq">
+
+      <!-- Hero -->
+      <div class="study-input-section podcast-hero" style="padding-bottom:8px">
+        <div class="podcast-hero-icon">📘</div>
+        <div class="podcast-hero-title">BCS &amp; Govt Job Prep</div>
+        <div class="podcast-hero-sub">MCQ bank with spaced repetition · AI explanations · audio answers</div>
+      </div>
+
+      <!-- Deck selector -->
+      <div class="study-input-section" style="margin-top:8px">
+        <div class="study-input-label">Choose a deck</div>
+        <div class="mcq-selector-row">
+          <select id="mcqDeckSelect" class="study-select" style="flex:1">
+            <option value="">— Select a deck —</option>
+          </select>
+          <button id="mcqLoadDeckBtn" class="study-gen-btn" style="flex:0 0 auto">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            Start
+          </button>
+        </div>
+        <!-- Exam mode presets -->
+        <div class="mcq-exam-presets-row">
+          <span class="mcq-exam-presets-label">📝 Exam Mode:</span>
+          <button class="mcq-exam-preset-btn" data-preset="0">10Q/5m</button>
+          <button class="mcq-exam-preset-btn" data-preset="1">20Q/10m</button>
+          <button class="mcq-exam-preset-btn" data-preset="2">30Q/15m</button>
+          <button class="mcq-exam-preset-btn" data-preset="3">50Q/25m</button>
+        </div>
+        <!-- Import row -->
+        <div class="mcq-import-row">
+          <button id="mcqLiveLoadBtn" class="mcq-live-btn">🌐 Load Live BCS</button>
+          <button id="mcqImportCSVBtn" class="mcq-import-btn">📥 Import CSV</button>
+          <label class="mcq-import-btn" for="mcqCSVFileInput" style="cursor:pointer">
+            📂 Upload CSV
+            <input type="file" id="mcqCSVFileInput" accept=".csv,.txt" style="display:none">
+          </label>
+          <button id="mcqOfflineSyncBtn" class="mcq-import-btn" title="Save all decks for offline use">📴 Sync Offline</button>
+        </div>
+        <div id="mcqLiveStatus" class="mcq-live-status"></div>
+        <div id="mcqOfflineStatus" class="mcq-offline-status">☁️ Not synced yet</div>
+        <!-- CSV paste area (hidden by default) -->
+        <div id="mcqCSVImportArea" style="display:none;margin-top:10px">
+          <div class="study-input-label">Paste CSV (question,A,B,C,D,correct,explanation)</div>
+          <textarea id="mcqCSVText" class="study-textarea" rows="4"
+            placeholder="Who is the Father of the Nation?,Sheikh Hasina,Ziaur Rahman,Sheikh Mujibur Rahman,Tajuddin Ahmad,C,Sheikh Mujibur Rahman led Bangladesh to independence."></textarea>
+          <button id="mcqCSVSubmitBtn" class="study-gen-btn" style="margin-top:8px;width:100%">Import Questions</button>
+        </div>
+      </div>
+
+      <!-- Exam mode timer banner (hidden until exam starts) -->
+      <div id="mcqExamModeBanner" class="mcq-exam-banner" style="display:none"></div>
+
+      <!-- Daily streak display -->
+      <div id="mcqStreakDisplay" class="mcq-streak-display">
+        <span class="mcq-streak-flame">💤</span>
+        <span class="mcq-streak-count">0 day streak</span>
+        <span class="mcq-streak-today">0 / 5 today</span>
+        <svg class="mcq-streak-ring" viewBox="0 0 44 44" width="36" height="36">
+          <circle cx="22" cy="22" r="18" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="4"/>
+          <circle id="mcqStreakRingFill" cx="22" cy="22" r="18" fill="none"
+            stroke="#f97316" stroke-width="4" stroke-linecap="round"
+            stroke-dasharray="113.1" stroke-dashoffset="113.1"
+            transform="rotate(-90 22 22)"/>
+        </svg>
+      </div>
+
+      <!-- Deck info + progress (hidden until deck loaded) -->
+      <div id="mcqDeckInfo" class="study-input-section" style="display:none;margin-top:8px">
+        <div class="mcq-deck-header">
+          <div>
+            <div class="mcq-deck-title" id="mcqDeckTitle">Deck</div>
+            <div class="mcq-deck-meta"><span id="mcqDeckCount">0</span> questions</div>
+          </div>
+          <div style="display:flex;gap:6px;align-items:center">
+            <select id="mcqPageSizeSelect" class="mcq-page-size-sel" title="Questions per session">
+              <option value="10">10/page</option>
+              <option value="15" selected>15/page</option>
+              <option value="20">20/page</option>
+              <option value="30">30/page</option>
+              <option value="50">50/page</option>
+            </select>
+            <button id="mcqResetProgressBtn" class="mcq-reset-btn" title="Reset progress">↺ Reset</button>
+          </div>
+        </div>
+        <!-- Category filter chips (shown only for multi-category decks) -->
+        <div id="mcqCategoryFilterWrap" class="mcq-cat-filter-wrap" style="display:none"></div>
+        <!-- Progress bar -->
+        <div class="mcq-progress-track">
+          <div class="mcq-progress-fill" id="mcqMasteredFill" style="width:0%"></div>
+        </div>
+        <div class="mcq-progress-meta">
+          <span>✅ <strong id="mcqMasteredCount">0</strong> mastered</span>
+          <span id="mcqMasteredPct" style="font-weight:700;color:var(--primary)">0%</span>
+          <span>⏳ <strong id="mcqDueCount">0</strong> due</span>
+        </div>
+      </div>
+
+      <!-- Session progress bar (shown during quiz) -->
+      <div id="mcqSessionProgress" class="mcq-session-progress" style="display:none">
+        <div class="mcq-session-progress-track">
+          <div class="mcq-session-progress-fill" id="mcqSessionProgressFill" style="width:0%"></div>
+        </div>
+        <span class="mcq-session-counter" id="mcqQuestionCounter">1 / 10</span>
+      </div>
+
+      <!-- Pagination row (shown for large decks) -->
+      <div id="mcqPaginationWrap" class="mcq-pagination-wrap" style="display:none"></div>
+
+      <!-- Quiz area -->
+      <div id="mcqQuizArea" class="mcq-quiz-area" style="display:none">
+        <div class="mcq-question-text" id="mcqQuizQuestion"></div>
+        <div class="mcq-options-list" id="mcqQuizOptions"></div>
+        <div id="mcqQuizFeedback"></div>
+        <button id="mcqNextBtn" class="mcq-next-btn" style="display:none">Next →</button>
+      </div>
+
+      <!-- Session done card -->
+      <div id="mcqSessionDone" style="display:none"></div>
+
+      <!-- Stats panel -->
+      <div class="study-input-section" style="margin-top:8px;padding-bottom:80px">
+        <details>
+          <summary class="mcq-stats-summary">📊 Question-by-question progress</summary>
+          <div id="mcqStatsBody" class="mcq-stats-body"></div>
+        </details>
+      </div>
+
+    </div><!-- /spanel-mcq -->
+
+    <!-- ═══ IELTS PREP PANEL ═══ -->
+    <div class="study-panel" id="spanel-ielts">
+
+      <!-- Hero with mini orb -->
+      <div class="ielts-hero">
+        <!-- Mini orb — cloned visual, wired to same state -->
+        <div class="ielts-mini-orb" id="ieltsMiniOrb">
+          <div class="ielts-mini-orb-inner" id="ieltsMiniOrbInner"></div>
+          <div class="ielts-mini-orb-ring r1"></div>
+          <div class="ielts-mini-orb-ring r2"></div>
+          <div class="ielts-mini-orb-halo"></div>
+        </div>
+        <div class="ielts-hero-text">
+          <div class="ielts-hero-welcome">Welcome to Nexora IELTS Preparation 🌻</div>
+          <div class="ielts-hero-title">IELTS Preparation Hub</div>
+          <div class="ielts-hero-sub">AI examiner · Voice practice · Band scoring · 500+ questions</div>
+          <div class="ielts-hero-status" id="ieltsHeroStatus">
+            <span class="ielts-status-dot"></span>
+            <span id="ieltsHeroStatusText">Ready</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Home panel: section cards + idiom/tip strip (hidden when a subtab is active) -->
+      <div id="ieltsHomePanel">
+        <!-- Quick-access section cards -->
+        <div class="ielts-section-cards">
+          <button class="ielts-section-card ielts-sc-speaking" onclick="_ieltsShowSubtab('speaking')">
+            <span class="ielts-sc-icon">🎤</span>
+            <span class="ielts-sc-label">Speaking</span>
+            <span class="ielts-sc-desc">AI examiner · Parts 1–3</span>
+          </button>
+          <button class="ielts-section-card ielts-sc-writing" onclick="_ieltsShowSubtab('writing')">
+            <span class="ielts-sc-icon">✍️</span>
+            <span class="ielts-sc-label">Writing</span>
+            <span class="ielts-sc-desc">Task 1 &amp; 2 · AI grading</span>
+          </button>
+          <button class="ielts-section-card ielts-sc-vocab" onclick="_ieltsShowSubtab('mcq')">
+            <span class="ielts-sc-icon">📖</span>
+            <span class="ielts-sc-label">Vocab &amp; Grammar</span>
+            <span class="ielts-sc-desc">500+ questions · AI quiz</span>
+          </button>
+          <button class="ielts-section-card ielts-sc-review" onclick="_ieltsShowSubtab('srs')">
+            <span class="ielts-sc-icon">🔁</span>
+            <span class="ielts-sc-label">Review Deck</span>
+            <span class="ielts-sc-desc">Spaced repetition · Missed words</span>
+            <span class="srs-due-badge" id="ieltsSRSBadgeCard" style="display:none">0</span>
+          </button>
+          <button class="ielts-section-card ielts-sc-wrongbook" onclick="_ieltsShowSubtab('wrongbook')">
+            <span class="ielts-sc-icon">📓</span>
+            <span class="ielts-sc-label">Wrong Book</span>
+            <span class="ielts-sc-desc">All your mistakes</span>
+            <span class="srs-due-badge" id="ieltsWrongBookBadgeCard" style="display:none">0</span>
+          </button>
+          <button class="ielts-section-card ielts-sc-progress" onclick="_ieltsShowSubtab('progress')">
+            <span class="ielts-sc-icon">📊</span>
+            <span class="ielts-sc-label">Progress</span>
+            <span class="ielts-sc-desc">Band history · Export PDF</span>
+          </button>
+          <button class="ielts-section-card ielts-sc-pron" onclick="startIELTSPronChallenge(); _ieltsShowSubtab('speaking')">
+            <span class="ielts-sc-icon">🗣️</span>
+            <span class="ielts-sc-label">Pronunciation</span>
+            <span class="ielts-sc-desc">Say it right · IPA + scoring</span>
+          </button>
+          <button class="ielts-section-card ielts-sc-reading" onclick="_ieltsShowSubtab('reading')">
+            <span class="ielts-sc-icon">📰</span>
+            <span class="ielts-sc-label">Reading</span>
+            <span class="ielts-sc-desc">Passages · 10 Q each · Timed</span>
+          </button>
+          <button class="ielts-section-card ielts-sc-listening" onclick="_ieltsShowSubtab('listening')">
+            <span class="ielts-sc-icon">🎧</span>
+            <span class="ielts-sc-label">Listening</span>
+            <span class="ielts-sc-desc">Sections 1–4 · TTS audio · Band scored</span>
+          </button>
+        </div>
+
+        <!-- Idiom of the Day + Daily Tip strip -->
+        <div id="ieltsIdiomOfDay"></div>
+        <div id="ieltsDailyTip"></div>
+      </div><!-- /#ieltsHomePanel -->
+
+      <!-- Back to overview button (shown when a subtab is active) -->
+      <button id="ieltsBackBtn" onclick="_ieltsShowHome()" style="display:none">← Overview</button>
+
+      <!-- Pronunciation challenge container -->
+      <div id="ieltsPronSection" style="display:none"></div>
+
+      <!-- Subtab bar (scrollable pill tabs) -->
+      <div class="ielts-subtab-bar">
+        <button class="ielts-subtab active" data-subtab="speaking">🎤 Speaking</button>
+        <button class="ielts-subtab" data-subtab="writing">✍️ Writing</button>
+        <button class="ielts-subtab" data-subtab="reading">📰 Reading</button>
+        <button class="ielts-subtab" data-subtab="listening">🎧 Listening</button>
+        <button class="ielts-subtab" data-subtab="mcq">📖 Vocab &amp; Grammar</button>
+        <button class="ielts-subtab" data-subtab="srs">
+          🔁 Review
+          <span class="srs-due-badge" id="ieltsSRSBadge" style="display:none">0</span>
+        </button>
+        <button class="ielts-subtab" data-subtab="wrongbook">
+          📓 Wrong Book
+          <span class="srs-due-badge" id="ieltsWrongBookBadge" style="display:none">0</span>
+        </button>
+        <button class="ielts-subtab" data-subtab="progress">📊 Progress</button>
+      </div>
+
+      <!-- ── SPEAKING SECTION ── -->
+      <div id="ieltsSpeakingSection">
+
+        <div id="speakingSetup">
+          <div class="study-input-section" style="margin-top:8px">
+            <div class="study-input-label">Full IELTS Speaking Mock Test</div>
+            <div style="font-size:12px;color:var(--text3);margin-bottom:12px">
+              Part 1 (Introduction) · Part 2 (Long Turn with cue card) · Part 3 (Discussion)<br>
+              Examiner: <strong id="ieltsExaminerNameDisplay">Examiner Evans</strong>
+            </div>
+            <button class="study-gen-btn" onclick="startIELTSSpeaking()" style="width:100%">
+              🎙️ Start Speaking Test
+            </button>
+            <!-- Sample Band 9 answer -->
+            <details style="margin-top:14px">
+              <summary class="ielts-sample-toggle">📖 See sample Band 8+ answer</summary>
+              <div class="ielts-sample-box">
+                <strong>Part 1 — Free Time</strong><br>
+                <em>Examiner:</em> What do you usually do in your leisure time?<br>
+                <em>Candidate:</em> In my spare time, I'm quite into reading historical novels — they give me a real sense of perspective. I also enjoy jogging in the park; it clears my mind after a long day of work.<br><br>
+                <strong>Part 2 — Describe a useful piece of technology</strong><br>
+                <em>Candidate:</em> The gadget I find indispensable is my noise-cancelling headset. I use it every morning to focus while preparing reports, and on my commute to block out city noise. It has improved my concentration immensely — I now finish tasks considerably faster. I would definitely recommend it to anyone who works in a noisy environment, because better focus leads to better results. More importantly, it protects your hearing in loud places.<br><br>
+                <strong>Part 3 — Technology &amp; Society</strong><br>
+                <em>Examiner:</em> Some argue that technology makes us less social. What's your view?<br>
+                <em>Candidate:</em> I think it's a double-edged sword. On one hand, social media can reduce face-to-face interaction. On the other hand, video calls have kept families connected across continents. The key is balanced usage — if we use technology mindfully, it can actually strengthen relationships rather than weaken them.
+              </div>
+            </details>
+          </div>
+        </div>
+
+        <div id="speakingSession" style="display:none;padding:0 4px">
+          <!-- Part transition banner -->
+          <div id="speakingPartBanner" style="display:none"></div>
+          <!-- Timer bar -->
+          <div class="ielts-timer-bar">
+            <span class="ielts-timer-label">⏱ Time</span>
+            <span class="ielts-timer-display" id="ieltsTimer_speaking">14:00</span>
+            <button class="ielts-session-exit-btn" onclick="exitIELTSSpeakingSession()" title="Exit session">✕ Exit</button>
+          </div>
+          <!-- Progress -->
+          <div class="viva-progress-row">
+            <span class="viva-progress-label" id="speakingProgress">Part 1 · Q1/7</span>
+            <div class="viva-progress-track">
+              <div class="viva-progress-fill" id="speakingProgressFill" style="width:0%"></div>
+            </div>
+          </div>
+
+          <!-- Ambient layout: question + live band panel side by side -->
+          <div class="ielts-speaking-ambient-layout">
+            <!-- Left: question + transcript -->
+            <div>
+              <!-- Question card -->
+              <div class="viva-question-card">
+                <div class="viva-q-label" id="speakingExaminerLabel">EXAMINER EVANS</div>
+                <div class="viva-question-text" id="speakingQuestion"></div>
+                <!-- Part 2 cue card -->
+                <div id="speakingPart2Prep" style="display:none;margin-top:12px">
+                  <div class="ielts-cue-card">
+                    <div class="ielts-cue-title">
+                      📋 Preparation Notes (1 minute)
+                      <span class="ielts-part2-timer" id="speakingPart2Timer">1:00</span>
+                    </div>
+                    <textarea id="speakingPrepNotes" class="study-textarea" rows="3"
+                      placeholder="Jot down keywords and ideas…"></textarea>
+                    <button class="study-gen-btn" id="speakingPart2StartBtn" style="margin-top:8px;width:100%"
+                      onclick="speakingStartPart2Speech()">▶ Start Speaking (2 minutes)</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- VAD status row -->
+              <div class="ielts-vad-row">
+                <div class="ielts-vad-indicator vad-off" id="ieltsVADIndicator"></div>
+                <span id="ieltsVADLabel">🎤 Tap to speak</span>
+                <button class="viva-mic-btn" id="speakingMicBtn"
+                  onclick="speakingToggleMic()" style="margin-left:auto">🎤</button>
+              </div>
+              <!-- Continue speaking link — shown after silence detection -->
+              <div id="speakingContinueRow" style="display:none;margin-top:4px;text-align:center">
+                <button class="ielts-continue-speaking-btn" onclick="speakingContinueSpeaking()">
+                  🎙 Continue speaking
+                </button>
+              </div>
+
+              <!-- Live transcript (ambient — auto-filled by VAD) -->
+              <div class="viva-answer-section" style="margin-top:6px">
+                <textarea id="speakingAnswerInput" class="ielts-transcript-area"
+                  placeholder="Your speech will appear here automatically as you speak…" rows="4"></textarea>
+                <div style="display:flex;gap:8px;margin-top:8px">
+                  <button class="study-gen-btn" id="speakingSubmitBtn"
+                    onclick="submitSpeakingAnswer()" style="flex:1">✅ Submit Answer</button>
+                </div>
+              </div>
+
+              <!-- Feedback -->
+              <div id="speakingFeedback" class="viva-critique-card" style="display:none;margin-top:12px"></div>
+              <!-- Next -->
+              <div id="speakingNextRow" style="display:none;margin-top:12px">
+                <button class="study-gen-btn" onclick="speakingNext()" style="width:100%">Next Question →</button>
+              </div>
+            </div>
+
+            <!-- Right: live band score panel -->
+            <div id="ieltsLiveBandPanel">
+              <div class="ilbp-title">🎙 Live Band Estimate</div>
+              <div class="ilbp-waiting">Start speaking to see your live score…</div>
+            </div>
+          </div>
+        </div>
+
+        <div id="speakingResults" style="display:none;padding:12px 4px"></div>
+
+      </div><!-- /ieltsSpeakingSection -->
+
+      <!-- ── WRITING SECTION ── -->
+      <div id="ieltsWritingSection" style="display:none">
+        <div class="study-input-section" style="margin-top:8px">
+          <div class="study-input-label">Writing Task</div>
+          <div class="study-input-row" style="margin-bottom:10px">
+            <select id="ieltsWritingTask" class="study-select">
+              <option value="1">Task 1 — Describe a graph / diagram</option>
+              <option value="2" selected>Task 2 — Discursive essay</option>
+            </select>
+            <button class="study-gen-btn" onclick="ieltsLoadWritingPrompt()">🎲 New Prompt</button>
+          </div>
+          <div id="ieltsWritingPromptText" class="ielts-writing-prompt">
+            Click "New Prompt" to get a writing task.
+          </div>
+          <div id="ieltsWritingWordTarget" class="ielts-word-target">Minimum 250 words</div>
+        </div>
+        <div id="ieltsWritingArea" style="display:none">
+          <div class="study-input-section" style="margin-top:8px">
+            <!-- Writing timer -->
+            <div class="ielts-timer-bar" style="margin-bottom:10px">
+              <span class="ielts-timer-label">⏱ Time</span>
+              <span class="ielts-timer-display" id="ieltsTimer_writing">40:00</span>
+              <input type="number" id="ieltsTimerCustom_writing" class="ielts-timer-input"
+                min="1" max="120" placeholder="min" title="Custom minutes">
+              <button id="ieltsTimerBtn_writing" class="ielts-timer-btn"
+                onclick="ieltsToggleTimer('writing')">▶ Start Timer</button>
+            </div>
+            <textarea id="ieltsWritingInput" class="study-textarea" rows="10"
+              placeholder="Write your response here…" style="min-height:200px"></textarea>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
+              <span id="ieltsWritingWordCount" class="ielts-word-count">0 words</span>
+              <button class="study-gen-btn" id="ieltsWritingSubmitBtn"
+                onclick="submitIELTSWriting()">✅ Submit for Evaluation</button>
+            </div>
+          </div>
+          <div id="ieltsWritingFeedback" class="viva-critique-card" style="display:none;margin-top:8px"></div>
+        </div>
+      </div><!-- /ieltsWritingSection -->
+
+      <!-- ── READING SECTION ── -->
+      <div id="ieltsReadingSection" style="display:none">
+
+        <!-- Setup card -->
+        <div class="vg-card" id="ieltsReadingSetup">
+          <div class="vg-header">
+            <div class="vg-title">📰 IELTS Reading</div>
+          </div>
+          <div class="ielts-reading-meta">
+            Authentic-style passages with 10 questions each. Timed, scored, and AI-explained.
+          </div>
+
+          <!-- Passage selector -->
+          <div class="ielts-reading-selector-label">Choose a passage</div>
+          <div class="ielts-reading-passage-grid" id="ieltsReadingPassageGrid">
+            <!-- Populated by JS -->
+          </div>
+
+          <!-- Timer row -->
+          <div class="vg-timer-row" style="margin-top:12px">
+            <span class="vg-timer-label">⏱ <span class="vg-timer-val" id="ieltsTimer_reading">20:00</span></span>
+            <div style="display:flex;align-items:center;gap:8px">
+              <input type="number" id="ieltsTimerCustom_reading" class="ielts-timer-input"
+                min="1" max="60" placeholder="min" title="Custom minutes">
+              <button id="ieltsTimerBtn_reading" class="vg-timer-btn"
+                onclick="ieltsToggleTimer('reading')">▶ Start</button>
+            </div>
+          </div>
+        </div><!-- /ieltsReadingSetup -->
+
+        <!-- Active reading session -->
+        <div id="ieltsReadingSession" style="display:none">
+          <!-- Passage display -->
+          <div class="ielts-reading-passage-card" id="ieltsReadingPassageCard">
+            <div class="ielts-reading-passage-title" id="ieltsReadingPassageTitle"></div>
+            <div class="ielts-reading-passage-body" id="ieltsReadingPassageBody"></div>
+          </div>
+          <!-- Question area -->
+          <div id="ieltsReadingQArea"></div>
+        </div><!-- /ieltsReadingSession -->
+
+        <!-- Results -->
+        <div id="ieltsReadingResults" style="display:none"></div>
+
+      </div><!-- /ieltsReadingSection -->
+
+      <!-- ── VOCAB & GRAMMAR MCQ SECTION ── -->
+      <div id="ieltsMCQSection" style="display:none">
+
+        <!-- Premium practice card -->
+        <div class="vg-card">
+
+          <!-- Header: title + mode pill tabs -->
+          <div class="vg-header">
+            <div class="vg-title">📖 Vocabulary &amp; Grammar</div>
+            <div class="vg-mode-tabs" id="vgModeTabs">
+              <div class="vg-mode-pill" id="vgPill"></div>
+              <button class="vg-mode-tab active" id="ieltsTypeTab_mixed"   onclick="_ieltsSetTypeTab('mixed')">Mixed</button>
+              <button class="vg-mode-tab"        id="ieltsTypeTab_vocab"   onclick="_ieltsSetTypeTab('vocab')">Vocabulary</button>
+              <button class="vg-mode-tab"        id="ieltsTypeTab_grammar" onclick="_ieltsSetTypeTab('grammar')">Grammar</button>
+            </div>
+          </div>
+
+          <!-- Grammar sub-topic chips (visible when Grammar selected) -->
+          <div id="ieltsGrammarTopicsRow" class="ielts-grammar-topics" style="display:none">
+            <button class="ielts-grammar-chip active" data-grammar="mixed"          onclick="_ieltsSetGrammarChip(this,'mixed')">All</button>
+            <button class="ielts-grammar-chip" data-grammar="tenses"                onclick="_ieltsSetGrammarChip(this,'tenses')">Tenses</button>
+            <button class="ielts-grammar-chip" data-grammar="conditionals"          onclick="_ieltsSetGrammarChip(this,'conditionals')">Conditionals</button>
+            <button class="ielts-grammar-chip" data-grammar="passive voice"         onclick="_ieltsSetGrammarChip(this,'passive voice')">Passive Voice</button>
+            <button class="ielts-grammar-chip" data-grammar="articles"              onclick="_ieltsSetGrammarChip(this,'articles')">Articles</button>
+            <button class="ielts-grammar-chip" data-grammar="reported speech"       onclick="_ieltsSetGrammarChip(this,'reported speech')">Reported Speech</button>
+            <button class="ielts-grammar-chip" data-grammar="relative clauses"      onclick="_ieltsSetGrammarChip(this,'relative clauses')">Relative Clauses</button>
+            <button class="ielts-grammar-chip" data-grammar="prepositions"          onclick="_ieltsSetGrammarChip(this,'prepositions')">Prepositions</button>
+            <button class="ielts-grammar-chip" data-grammar="collocations"          onclick="_ieltsSetGrammarChip(this,'collocations')">Collocations</button>
+          </div>
+
+          <!-- Difficulty pills -->
+          <div class="vg-diff-row">
+            <button class="vg-diff-btn"        id="ieltsDiffTab_easy"   onclick="_ieltsSetDiffTab('easy')">
+              <span class="vg-diff-dot" style="background:#22c55e"></span>Easy
+            </button>
+            <button class="vg-diff-btn active" id="ieltsDiffTab_medium" onclick="_ieltsSetDiffTab('medium')">
+              <span class="vg-diff-dot" style="background:#eab308"></span>Medium
+            </button>
+            <button class="vg-diff-btn"        id="ieltsDiffTab_hard"   onclick="_ieltsSetDiffTab('hard')">
+              <span class="vg-diff-dot" style="background:#ef4444"></span>Hard
+            </button>
+            <div class="vg-count-wrap">
+              <select id="ieltsMcqCount" class="vg-count-select">
+                <option value="5">5 Q</option>
+                <option value="10" selected>10 Q</option>
+                <option value="20">20 Q</option>
+                <option value="30">30 Q</option>
+                <option value="50">50 Q</option>
+                <option value="100">100 Q</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Big animated start button -->
+          <button class="vg-start-btn" id="ieltsGenMcqBtn" onclick="generateIELTSMcq()">
+            ⚡ Start Practice
+          </button>
+
+          <!-- Streak + daily challenge row -->
+          <div class="vg-streak-row">
+            <div>
+              <div class="vg-streak-label" id="ieltsDailyStreak">🔥 0-day streak</div>
+              <div class="vg-streak-sub"   id="ieltsDailyStatus">⏳ Not done yet</div>
+            </div>
+            <button class="vg-daily-btn" id="ieltsDailyChallengeBtn" onclick="startIELTSDailyChallenge()">
+              🎯 Daily Challenge
+            </button>
+          </div>
+
+          <!-- Preset grid -->
+          <div class="vg-presets-label">Quick Presets</div>
+          <div class="vg-presets-grid">
+            <button class="vg-preset" onclick="_ieltsApplyPreset(0)">⚡ Quick Drill</button>
+            <button class="vg-preset" onclick="_ieltsApplyPreset(1)">📝 Grammar Mini</button>
+            <button class="vg-preset vg-preset-hot" onclick="_ieltsApplyPreset(2)">🎯 Band 7</button>
+            <button class="vg-preset" onclick="_ieltsApplyPreset(3)">📖 Vocab Sprint</button>
+            <button class="vg-preset vg-preset-hot" onclick="_ieltsApplyPreset(4)">🔥 Full Mock</button>
+            <button class="vg-preset" onclick="_ieltsApplyPreset(5)">💯 Marathon</button>
+            <button class="vg-preset" onclick="_ieltsApplyPreset(6)">🔵 Conditionals</button>
+            <button class="vg-preset" onclick="_ieltsApplyPreset(7)">🟣 Passive Voice</button>
+          </div>
+
+          <!-- Timer row -->
+          <div class="vg-timer-row">
+            <span class="vg-timer-label">⏱ <span class="vg-timer-val" id="ieltsTimer_mcq">10:00</span></span>
+            <div style="display:flex;align-items:center;gap:8px">
+              <input type="number" id="ieltsTimerCustom_mcq" class="ielts-timer-input"
+                min="1" max="120" placeholder="min" title="Custom minutes">
+              <button id="ieltsTimerBtn_mcq" class="vg-timer-btn"
+                onclick="ieltsToggleTimer('mcq')">▶ Start</button>
+            </div>
+          </div>
+
+          <!-- AI source indicator -->
+          <div class="vg-ai-source" id="vgAiSource">
+            <span class="vg-ai-dot cf"></span>
+            <span id="vgAiSourceLabel">CF Worker AI → OpenRouter fallback</span>
+          </div>
+
+        </div><!-- /vg-card -->
+
+        <!-- Hidden selects for JS compatibility -->
+        <div style="display:none">
+          <select id="ieltsMcqType"><option value="mixed" selected>Mixed</option><option value="vocab">Vocab</option><option value="grammar">Grammar</option></select>
+          <select id="ieltsGrammarTopic"><option value="mixed" selected>mixed</option></select>
+          <select id="ieltsDifficulty"><option value="easy">easy</option><option value="medium" selected>medium</option><option value="hard">hard</option></select>
+          <select id="ieltsPracticeMode"><option value="practice" selected>practice</option><option value="exam">exam</option></select>
+          <input type="text" id="ieltsMcqTopic" value="">
+        </div>
+
+        <div id="ieltsMcqArea" style="display:none;margin-top:8px"></div>
+
+        <!-- AI Tutor panel -->
+        <div class="vg-card" style="margin-top:10px">
+          <div class="vg-title" style="margin-bottom:10px">🤖 Ask AI Tutor</div>
+          <textarea id="ieltsGrammarQuery" class="study-textarea" rows="2"
+            placeholder="e.g. Explain the third conditional · Difference between 'affect' and 'effect' · 5 synonyms for 'important'"></textarea>
+          <button class="vg-start-btn" id="ieltsGrammarAskBtn"
+            onclick="askIELTSGrammar()" style="margin-top:8px;font-size:13px;height:44px">
+            🤖 Ask AI Tutor
+          </button>
+          <div id="ieltsGrammarAnswer" class="ielts-grammar-answer" style="display:none"></div>
+        </div>
+
+      </div><!-- /ieltsMCQSection -->
+
+      <!-- ── SRS VOCABULARY REVIEW SECTION ── -->
+      <div id="ieltsSRSSection" style="display:none">
+        <div id="ieltsSRSSetup" class="study-input-section" style="margin-top:8px">
+          <div class="study-input-label">🔁 Vocabulary Review Deck</div>
+          <div style="font-size:12px;color:var(--text3);margin-bottom:12px">
+            Words you miss in quizzes are automatically added here.<br>
+            SM-2 spaced repetition schedules them for optimal recall.
+          </div>
+          <button class="study-gen-btn" onclick="startIELTSSRSSession()" style="width:100%">
+            🃏 Start Review Session
+          </button>
+        </div>
+        <div id="ieltsSRSSession" style="display:none;padding:0 4px">
+          <div class="viva-progress-row">
+            <span class="viva-progress-label" id="ieltsSRSCounter">1 / 10</span>
+            <div class="viva-progress-track">
+              <div class="viva-progress-fill" id="ieltsSRSProgressFill" style="width:0%"></div>
+            </div>
+          </div>
+          <div class="ielts-srs-card">
+            <div class="ielts-srs-front" id="ieltsSRSFront"></div>
+            <div class="ielts-srs-back" id="ieltsSRSBack" style="display:none"></div>
+          </div>
+          <button id="ieltsSRSFlipBtn" class="study-gen-btn" style="width:100%;margin-top:10px"
+            onclick="ieltsSRSFlip()">👁 Show Answer</button>
+          <div id="ieltsSRSRating" class="ielts-srs-rating" style="display:none">
+            <button class="ielts-srs-rate-btn ielts-rate-hard" onclick="ieltsSRSRate(false)">😓 Hard — review tomorrow</button>
+            <button class="ielts-srs-rate-btn ielts-rate-good" onclick="ieltsSRSRate(true)">✅ Got it!</button>
+          </div>
+        </div>
+        <div id="ieltsSRSDone" style="display:none"></div>
+      </div><!-- /ieltsSRSSection -->
+
+      <!-- ── WRONG-QUESTION NOTEBOOK SECTION ── -->
+      <div id="ieltsWrongBookSection" style="display:none">
+        <div class="study-input-section" style="margin-top:8px">
+          <div class="study-input-label" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+            <span>📓 Wrong-Question Notebook</span>
+            <select id="ieltsWrongBookFilter" class="study-select" style="width:auto;font-size:12px"
+              onchange="renderIELTSWrongBook()">
+              <option value="all">All Topics</option>
+              <option value="tenses">Tenses</option>
+              <option value="conditionals">Conditionals</option>
+              <option value="passive voice">Passive Voice</option>
+              <option value="articles">Articles</option>
+              <option value="reported speech">Reported Speech</option>
+              <option value="relative clauses">Relative Clauses</option>
+              <option value="prepositions">Prepositions</option>
+              <option value="collocations">Collocations</option>
+              <option value="mixed">Mixed</option>
+            </select>
+          </div>
+          <div id="ieltsWrongBookArea" style="margin-top:8px"></div>
+        </div>
+      </div><!-- /ieltsWrongBookSection -->
+
+      <!-- ── PROGRESS SECTION ── -->
+      <div id="ieltsProgressSection" style="display:none;padding-bottom:80px">
+        <div class="study-input-section" style="margin-top:8px">
+          <div class="study-input-label">Your IELTS Band Score History</div>
+          <div class="ielts-progress-grid">
+            <div class="ielts-progress-card">
+              <div class="ielts-progress-skill">🎤 Speaking</div>
+              <div class="ielts-progress-band" id="ieltsProgress_speaking">—</div>
+              <div class="ielts-progress-bar-wrap">
+                <div class="ielts-progress-bar-fill" id="ieltsBar_speaking" style="width:0%"></div>
+              </div>
+            </div>
+            <div class="ielts-progress-card">
+              <div class="ielts-progress-skill">✍️ Writing</div>
+              <div class="ielts-progress-band" id="ieltsProgress_writing">—</div>
+              <div class="ielts-progress-bar-wrap">
+                <div class="ielts-progress-bar-fill" id="ieltsBar_writing" style="width:0%"></div>
+              </div>
+            </div>
+            <div class="ielts-progress-card">
+              <div class="ielts-progress-skill">📖 Vocab</div>
+              <div class="ielts-progress-band" id="ieltsProgress_vocab">—</div>
+              <div class="ielts-progress-bar-wrap">
+                <div class="ielts-progress-bar-fill" id="ieltsBar_vocab" style="width:0%"></div>
+              </div>
+            </div>
+            <div class="ielts-progress-card">
+              <div class="ielts-progress-skill">📰 Reading</div>
+              <div class="ielts-progress-band" id="ieltsProgress_reading">—</div>
+              <div class="ielts-progress-bar-wrap">
+                <div class="ielts-progress-bar-fill" id="ieltsBar_reading" style="width:0%"></div>
+              </div>
+            </div>
+          </div>
+          <div style="margin-top:14px;font-size:11px;color:var(--text3);text-align:center">
+            Scores are averaged across all your practice sessions and stored locally.
+          </div>
+          <button class="mcq-btn-secondary" style="margin-top:12px;width:100%"
+            onclick="exportIELTSReport()">📄 Export Full Report PDF</button>
+        </div>
+      </div><!-- /ieltsProgressSection -->
+
+      <!-- ── LISTENING SECTION ── -->
+      <div id="ieltsListeningSection" style="display:none">
+
+        <!-- Setup -->
+        <div id="ieltsListeningSetup" class="study-input-section" style="margin-top:8px">
+          <div class="study-input-label">🎧 IELTS Listening Practice</div>
+          <div style="font-size:12px;color:var(--text3);margin-bottom:14px">
+            Choose a section. Audio is read by TTS. Answer questions while listening.<br>
+            Sections 3 &amp; 4 are faster and more academic — Band 8.5–9 difficulty.
+          </div>
+          <div class="ilp-section-grid">
+            <button class="ilp-section-btn" onclick="startIELTSListening(1)">
+              <span class="ilp-sec-num">1</span>
+              <span class="ilp-sec-label">Everyday Social</span>
+              <span class="ilp-sec-desc">Conversations · Easy</span>
+            </button>
+            <button class="ilp-section-btn" onclick="startIELTSListening(2)">
+              <span class="ilp-sec-num">2</span>
+              <span class="ilp-sec-label">General Monologue</span>
+              <span class="ilp-sec-desc">Talks · Medium</span>
+            </button>
+            <button class="ilp-section-btn" onclick="startIELTSListening(3)">
+              <span class="ilp-sec-num">3</span>
+              <span class="ilp-sec-label">Academic Discussion</span>
+              <span class="ilp-sec-desc">Multi-speaker · Hard</span>
+            </button>
+            <button class="ilp-section-btn" onclick="startIELTSListening(4)">
+              <span class="ilp-sec-num">4</span>
+              <span class="ilp-sec-label">Academic Lecture</span>
+              <span class="ilp-sec-desc">Monologue · Band 9</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Active session -->
+        <div id="ieltsListeningSession" style="display:none">
+          <!-- Header -->
+          <div class="ilp-header">
+            <div>
+              <div class="ilp-section-label" id="ilpSectionLabel">Section 1</div>
+              <div class="ilp-topic" id="ilpTopic"></div>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+              <div class="ilp-status" id="ilpStatus">Ready</div>
+              <button class="ilp-mode-toggle" id="ilpModeLabel" onclick="ilpToggleMode()">📚 Practice Mode</button>
+            </div>
+          </div>
+
+          <!-- Pre-read countdown -->
+          <div class="ilp-preread-bar" id="ilpPreReadTimer" style="display:none">
+            <span class="ilp-prt-label">📖 Pre-read time:</span>
+            <span class="ilp-prt-count">30s</span>
+            <button class="ilp-prt-skip" onclick="_ilpSkipPreRead()">Skip →</button>
+          </div>
+
+          <!-- Waveform + controls -->
+          <div class="ilp-player">
+            <div class="ilp-waveform" id="ilpWaveform">
+              <span></span><span></span><span></span><span></span><span></span>
+              <span></span><span></span><span></span><span></span><span></span>
+            </div>
+            <div class="ilp-controls">
+              <button class="ilp-play-btn" id="ilpPlayBtn" onclick="ilpTogglePlay()">▶ Play Audio</button>
+              <button class="ilp-replay-btn" id="ilpReplayBtn" onclick="ilpReplay()">↺ Restart</button>
+            </div>
+          </div>
+
+          <!-- Notepad (scratch pad during playback) -->
+          <details class="ilp-notepad-wrap">
+            <summary class="ilp-notepad-toggle">📝 Notes (scratch pad)</summary>
+            <textarea id="ilpNotepad" class="ilp-notepad"
+              placeholder="Jot down key words while listening…" rows="3"></textarea>
+          </details>
+
+          <!-- Transcript toggle -->
+          <div id="ilpTranscriptWrap" style="display:none;margin-top:6px">
+            <button class="ilp-transcript-btn" onclick="ilpToggleTranscript()">📄 Show / Hide Transcript</button>
+            <div id="ilpTranscriptBody" class="ilp-transcript" style="display:none"></div>
+          </div>
+
+          <!-- Questions -->
+          <div class="ilp-questions-label">Answer the questions below:</div>
+          <div id="ieltsListeningQArea"></div>
+
+          <!-- Submit -->
+          <button class="study-gen-btn" id="ieltsListeningSubmitBtn"
+            onclick="submitIELTSListening()" style="width:100%;margin-top:12px;display:none">
+            ✅ Submit Answers
+          </button>
+        </div><!-- /ieltsListeningSession -->
+
+        <!-- Results -->
+        <div id="ieltsListeningResults" style="display:none"></div>
+
+      </div><!-- /ieltsListeningSection -->
+
+    </div><!-- /spanel-ielts -->
+
+    <!-- Loading spinner overlay (shared across tabs) -->
+    <div class="study-loading" id="studyLoading" style="display:none">
+      <div class="study-spinner"></div>
+      <div class="study-loading-text" id="studyLoadingText">Generating with AI…</div>
+    </div>
+
+  </div><!-- /studyScreen -->
+
+  <!-- ══ AI COMPARE MODE — overlay inside #phone so position:absolute fills phone, not body ══ -->
+  <div id="comparePanel">
+
+    <div class="cmp-header">
+      <h3>⚖️ AI Compare Mode</h3>
+      <button id="cmpExportBtn" onclick="exportComparison()" title="Download as Markdown">📄 Export</button>
+      <button class="cmp-close" onclick="closeComparePanel()">✕ Close</button>
+    </div>
+
+    <!-- ── AI Selector Bar ── -->
+    <div class="cmp-selector-bar" id="cmpSelectorBar">
+      <button class="ai-select-btn" onclick="openAISheet()">
+        <span class="ai-select-icon">✦</span>
+        <span class="ai-select-label" id="aiSelectLabel">Choose AIs</span>
+        <span class="ai-select-count" id="aiSelectCount">3</span>
+      </button>
+      <div class="ai-active-dots" id="aiActiveDots"></div>
+    </div>
+
+    <!-- ── AI Selection Sheet (bottom overlay) ── -->
+    <div class="ai-sheet-backdrop" id="aiSheetBackdrop" onclick="closeAISheet()"></div>
+    <div class="ai-sheet" id="aiSheet">
+      <div class="ai-sheet-handle"></div>
+      <div class="ai-sheet-top">
+        <button class="ai-sheet-back" onclick="closeAISheet()" aria-label="Back to compare">← Back</button>
+        <div class="ai-sheet-title">✦ Select AIs</div>
+        <button class="ai-sheet-done" onclick="closeAISheet()">Done ✓</button>
+      </div>
+
+      <!-- ── Recommended + Category Filters ── -->
+      <div class="ai-sheet-controls">
+        <div class="ai-recommended-row">
+          <span class="ai-rec-label">⭐ Recommended:</span>
+          <div class="ai-rec-chips" id="aiRecChips"></div>
+        </div>
+        <div class="ai-cat-row" id="aiCatRow">
+          <button class="ai-cat-chip" data-cat="coding"   onclick="selectAICat(this)">💻 Coding</button>
+          <button class="ai-cat-chip" data-cat="math"     onclick="selectAICat(this)">📐 Math</button>
+          <button class="ai-cat-chip" data-cat="writing"  onclick="selectAICat(this)">✍️ Writing</button>
+          <button class="ai-cat-chip" data-cat="research" onclick="selectAICat(this)">🔬 Research</button>
+          <button class="ai-cat-chip" data-cat="fast"     onclick="selectAICat(this)">⚡ Fast</button>
+        </div>
+      </div>
+
+      <div class="ai-sheet-scroll">
+        <div class="ai-sheet-grid" id="aiSheetGrid"></div>
+      </div>
+    </div>
+
+    <!-- ── Model Info Modal (slides up over the sheet) ── -->
+    <div class="ai-info-backdrop" id="aiInfoBackdrop" onclick="closeInfoModal()"></div>
+    <div class="ai-info-modal" id="aiInfoModal">
+      <div class="ai-info-handle"></div>
+      <div class="ai-info-header">
+        <div class="ai-info-icon-wrap" id="aiInfoIcon">🤖</div>
+        <div class="ai-info-title-col">
+          <div class="ai-info-name" id="aiInfoName">Model</div>
+          <div class="ai-info-tags" id="aiInfoTags"></div>
+        </div>
+      </div>
+      <div class="ai-info-body">
+        <div>
+          <div class="ai-info-section-label">Best for</div>
+          <div class="ai-info-bestfor" id="aiInfoBestFor"></div>
+        </div>
+        <div>
+          <div class="ai-info-section-label">Why this model?</div>
+          <div class="ai-info-why" id="aiInfoWhy"></div>
+        </div>
+      </div>
+      <div class="ai-info-actions">
+        <button class="ai-info-use-btn" id="aiInfoUseBtn" onclick="infoUseModel()">✅ Use this model</button>
+        <button class="ai-info-add-btn" id="aiInfoAddBtn" onclick="infoAddToCompare()">➕ Add to compare</button>
+      </div>
+      <div class="ai-info-close-row">
+        <button class="ai-info-close-btn" onclick="closeInfoModal()">Close</button>
+      </div>
+    </div>
+
+    <!-- ☁️ Cloudflare Worker URL Panel -->
+    <div id="cfWorkerPanel">
+      <div class="cf-panel-inner">
+        <div class="cf-panel-title">☁️ Connect Cloudflare AI (Free)</div>
+        <div class="cf-panel-sub">
+          Deploy <strong>nexora-worker.js</strong> to your Cloudflare account to unlock free Cloudflare study + compare models
+          (Llama 3.3 70B, DeepSeek R1, Mistral and more) — completely free, no credit card needed.<br><br>
+          <a href="https://dash.cloudflare.com/?to=/:account/workers-and-pages/create" target="_blank" rel="noopener">→ Open Cloudflare Workers Dashboard</a>
+        </div>
+        <div class="cf-panel-steps">
+          <b>Quick Setup (2 min):</b><br>
+          1. Open Cloudflare → Workers &amp; Pages → Create Worker<br>
+          2. Paste the <b>nexora-worker.js</b> code → Deploy<br>
+          3. Go to Worker Settings → Bindings → Add <b>AI</b> binding<br>
+          4. Copy your Worker URL and paste below 👇
+        </div>
+        <div class="cf-input-row">
+          <input id="cfWorkerUrlInput" class="cf-url-input" type="url"
+            placeholder="https://nexora-ai.YOUR-NAME.workers.dev" autocomplete="off" spellcheck="false"/>
+          <button class="cf-save-btn" onclick="saveCFWorkerUrl()">Save</button>
+          <button class="cf-remove-btn" id="cfRemoveBtn" style="display:none" onclick="removeCFWorkerUrl()">✕</button>
+        </div>
+        <div class="cf-test-status" id="cfTestStatus"></div>
+        <button class="cf-close-btn" onclick="closeCFPanel()">Done</button>
+      </div>
+    </div>
+
+    <!-- Key Input Modal -->
+    <div id="cmpKeyModal" class="cmp-key-modal" style="display:none">
+      <div class="cmp-key-modal-inner">
+        <div class="cmp-key-modal-title" id="cmpKeyModalTitle">Add API Key</div>
+        <div class="cmp-key-modal-sub" id="cmpKeyModalSub"></div>
+        <div class="cmp-key-input-row">
+          <input type="password" id="cmpKeyInput" class="cmp-key-input" placeholder="Paste your API key…" autocomplete="off"/>
+          <button class="cmp-key-save-btn" onclick="saveKeyModal()">Save</button>
+          <button class="cmp-key-remove-btn" id="cmpKeyRemoveBtn" onclick="removeKeyModal()" style="display:none">Remove</button>
+        </div>
+        <div class="cmp-key-modal-links" id="cmpKeyModalLinks"></div>
+        <button class="cmp-key-close-btn" onclick="closeKeyModal()">✕ Cancel</button>
+      </div>
+    </div>
+
+    <!-- Results -->
+    <div id="cmpResults">
+      <div class="cmp-empty" id="cmpEmpty">
+        <div class="cmp-icon">⚖️</div>
+        <p>Ask a question below — all active AIs respond at the same time.</p>
+        <p style="opacity:0.6;font-size:12px;">Use <strong>Final Verdict</strong> after answers load to get a combined best answer!</p>
+      </div>
+    </div>
+
+    <!-- Input bar — always pinned at bottom -->
+    <div id="cmpInputBar">
+      <button class="cmp-clear-btn" onclick="clearCompareChat()" title="Clear chat">🗑️</button>
+      <div class="input-wrap">
+        <textarea id="cmpInput" placeholder="Ask all AIs… follow-ups welcome!" rows="1" maxlength="500"></textarea>
+      </div>
+      <button class="send-btn" onclick="sendCompare()">
+        <svg viewBox="0 0 24 24" fill="white" width="18" height="18"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
+      </button>
+    </div>
+  </div><!-- /comparePanel -->
+
+  <!-- 📊 Progress Dashboard overlay -->
+  <div id="progressDashboard" class="dash-overlay">
+    <div class="dash-panel">
+      <div class="dash-header">
+        <div class="dash-header-copy">
+          <div class="dash-header-title"><span>📊</span> Progress Dashboard</div>
+          <div class="dash-header-subtitle">Your learning insights · Track growth over time</div>
+        </div>
+        <button class="dash-close-btn" onclick="closeProgressDashboard()">✕ Close</button>
+      </div>
+      <div class="dash-body" id="dashboardBody"></div>
+    </div>
+  </div>
+
+
+</div><!-- /phone -->
+
+<!-- Markdown + Syntax Highlighting -->
+<script src="https://cdn.jsdelivr.net/npm/marked@9.1.6/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="./nexora-data.js"></script>
+<script src="./nexora-core.js?v=20260503-1" defer></script>
+<script src="./nexora-ai.js?v=20260503-1" defer></script>
+<script src="./nexora-study.js?v=20260503-1" defer></script>
+<script src="./nexora-notebook.js?v=20260503-1" defer></script>
+<script src="./nexora-notebook-features.js?v=20260503-1" defer></script>
+<script src="./nexora-mcq.js?v=20260503-1" defer></script>
+<script src="./nexora-bcs-decks.js?v=20260503-1" defer></script>
+<script src="./nexora-ielts.js?v=20260503-2" defer></script>
+<script src="./pwa-install.js?v=20260503-1" defer></script>
+
+<!-- Orb magnetic cursor glow — tracks mouse over the orb container -->
+<script>
+  (function() {
+    const orb = document.getElementById('nexoraOrbContainer');
+    if (!orb) return;
+    orb.addEventListener('mousemove', function(e) {
+      const r = orb.getBoundingClientRect();
+      orb.style.setProperty('--mx', ((e.clientX - r.left) / r.width  * 100).toFixed(1) + '%');
+      orb.style.setProperty('--my', ((e.clientY - r.top)  / r.height * 100).toFixed(1) + '%');
+    });
+    orb.addEventListener('mouseleave', function() {
+      orb.style.setProperty('--mx', '50%');
+      orb.style.setProperty('--my', '50%');
+    });
+  })();
+</script>
+
+<!-- Bottom Nav + Mode Pills controller -->
+<script>
+(function() {
+
+  // ── Splash → Name screen transition ──────────────────────────
+  window.showNameScreen = function() {
+    var splash = document.getElementById('splashScreen');
+    var name   = document.getElementById('nameScreen');
+    if (!splash || !name) return;
+    splash.style.animation = 'splash-exit 0.4s cubic-bezier(0.4,0,1,1) forwards';
+    setTimeout(function() {
+      splash.classList.remove('active');
+      splash.style.display = 'none';
+      name.classList.add('active');
+    }, 380);
+  };
+  // ── Bottom nav tab switching ──────────────────────────────────
+  window.bnSwitchTab = function(tab) {
+    // Update active state on all tabs
+    document.querySelectorAll('.bn-tab').forEach(function(el) {
+      el.classList.remove('active');
+    });
+    var btn = document.getElementById('bntab-' + tab);
+    if (btn) btn.classList.add('active');
+
+    // Haptic-style scale pulse
+    if (btn) {
+      btn.style.transform = 'scale(0.88)';
+      setTimeout(function() { btn.style.transform = ''; }, 120);
+    }
+
+    // Route to the right screen/panel
+    switch (tab) {
+      case 'chat':
+        // Go back to chat — use existing handleBack or showScreen
+        if (typeof showScreen === 'function') showScreen('chatScreen');
+        else if (typeof handleBack === 'function') handleBack();
+        break;
+      case 'study':
+        if (typeof openStudyMode === 'function') openStudyMode();
+        break;
+      case 'compare':
+        if (typeof openComparePanel === 'function') openComparePanel();
+        break;
+      case 'progress':
+        if (typeof openProgressDashboard === 'function') openProgressDashboard();
+        break;
+      case 'more':
+        if (typeof toggleMenu === 'function') toggleMenu();
+        break;
+    }
+  };
+
+  // ── Mode pill active state helper ────────────────────────────
+  window.bnSetPill = function(el) {
+    document.querySelectorAll('.mode-pill').forEach(function(p) {
+      p.classList.remove('active');
+    });
+    if (el) el.classList.add('active');
+  };
+
+  // ── Populate streak badge when study mode opens ───────────────
+  var _origOpenStudy = window.openStudyMode;
+  document.addEventListener('DOMContentLoaded', function() {
+    // Patch openStudyMode to update streak badge each time
+    var patchStreak = function() {
+      try {
+        var streak = JSON.parse(localStorage.getItem('ielts_streak') || '{"count":0}');
+        var srsStreak = JSON.parse(localStorage.getItem('nexora_srs_streak') || '{"streak":0}');
+        var count = Math.max(streak.count || 0, srsStreak.streak || 0);
+        var el = document.getElementById('studyStreakCount');
+        var badge = document.getElementById('studyStreakBadge');
+        if (el) el.textContent = count;
+        if (badge) badge.style.display = count > 0 ? 'inline-flex' : 'none';
+      } catch(e) {}
+    };
+    // Run on load
+    patchStreak();
+    // Also run whenever study screen becomes visible
+    var studyScreen = document.getElementById('studyScreen');
+    if (studyScreen) {
+      new MutationObserver(function() {
+        if (studyScreen.classList.contains('active')) patchStreak();
+      }).observe(studyScreen, { attributes: true, attributeFilter: ['class'] });
+    }
+    // Show study source shell only when file is uploaded
+    var origHandleUpload = window.handleStudyFileUpload;
+    if (typeof origHandleUpload === 'function') {
+      window.handleStudyFileUpload = function(event) {
+        origHandleUpload(event);
+        var shell = document.querySelector('.study-source-shell');
+        if (shell) shell.classList.add('has-file');
+      };
+    }
+    var origClearUpload = window.clearStudyUpload;
+    if (typeof origClearUpload === 'function') {
+      window.clearStudyUpload = function() {
+        origClearUpload();
+        var shell = document.querySelector('.study-source-shell');
+        if (shell) shell.classList.remove('has-file');
+      };
+    }
+  });
+
+  // ── Mark the app shell ready once an inner app surface is active ───
+  document.addEventListener('DOMContentLoaded', function() {
+    var phone = document.getElementById('phone');
+    if (!phone) return;
+    // Only watch phone's own class — not subtree (subtree causes infinite loop)
+    new MutationObserver(function(mutations, obs) {
+      var chat = document.getElementById('chatScreen');
+      var study = document.getElementById('studyScreen');
+      if ((chat && chat.classList.contains('active')) || (study && study.classList.contains('active'))) {
+        phone.classList.add('app-ready');
+        obs.disconnect(); // one-time only
+      }
+    }).observe(phone, { childList: false, subtree: false, attributes: true, attributeFilter: ['class'] });
+  });
+
+  // ── Sync bottom nav active tab when screens change ────────────
+  document.addEventListener('DOMContentLoaded', function() {
+    var phone = document.getElementById('phone');
+    if (!phone) return;
+    var lastTab = 'chat';
+    new MutationObserver(function() {
+      var cls = phone.className;
+      var newTab = 'chat';
+      if (cls.includes('study-mode-open'))   newTab = 'study';
+      if (cls.includes('compare-mode-open')) newTab = 'compare';
+      if (newTab !== lastTab) {
+        lastTab = newTab;
+        document.querySelectorAll('.bn-tab').forEach(function(el) { el.classList.remove('active'); });
+        var btn = document.getElementById('bntab-' + newTab);
+        if (btn) btn.classList.add('active');
+      }
+    }).observe(phone, { attributes: true, attributeFilter: ['class'] });
+  });
+})();
+</script>
+</body>
+</html>
